@@ -1,29 +1,20 @@
-'use client';
-
 import { Home, User, PenSquare, LogIn } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '../ui/button';
 import UserNav from '../auth/UserNav';
 import { NexoLogo } from '../shared/NexoLogo';
 import { CreatePostDialog } from '../posts/CreatePost';
-import { MOCK_USER } from '@/lib/mock-data';
-import type { PostWithAuthor } from '@/lib/types';
+import { createServerClient } from '@/lib/supabase/server';
+import type { Profile } from '@/lib/types';
 
-// Esto es una solución temporal para pasar la función de creación de posts
-// a través de componentes que no están directamente anidados.
-// En una app real, usaríamos React Context o una librería de estado.
-declare global {
-    var postCreationHandler: (post: PostWithAuthor) => void;
-}
-
-export default function Sidebar() {
-  const user = MOCK_USER; 
-  const profile = user ? { username: user.username } : null;
-
-  const handlePostCreated = (newPost: PostWithAuthor) => {
-    if(window.postCreationHandler) {
-        window.postCreationHandler(newPost);
-    }
+export default async function Sidebar() {
+  const supabase = createServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  let profile: Profile | null = null;
+  if (user) {
+    const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+    profile = data;
   }
 
   const navItems = [
@@ -61,9 +52,9 @@ export default function Sidebar() {
       </nav>
 
       <div className="mt-auto flex w-full flex-col gap-2">
-        {user ? (
+        {user && profile ? (
           <>
-            <CreatePostDialog user={user} onPostCreated={handlePostCreated}>
+            <CreatePostDialog user={user} profile={profile}>
               <Button className="w-full justify-center gap-3 p-3 text-base lg:justify-start">
                 <PenSquare className="h-6 w-6" />
                 <span className="hidden lg:inline">Publicar</span>

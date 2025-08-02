@@ -11,7 +11,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import type { Profile, User } from '@/lib/types';
+import type { Profile } from '@/lib/types';
+import type { User } from '@supabase/supabase-js';
 import { LogOut, User as UserIcon, ChevronsUpDown, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { createBrowserClient } from '@/lib/supabase/client';
@@ -68,16 +69,20 @@ export default function UserNav({
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <Link href={`/u/${username}`}>
-            <DropdownMenuItem>
-              <UserIcon className="mr-2 h-4 w-4" />
-              <span>Perfil</span>
+          <Link href={`/u/${username}`} passHref>
+            <DropdownMenuItem asChild>
+                <Link href={`/u/${username}`}>
+                    <UserIcon className="mr-2 h-4 w-4" />
+                    <span>Perfil</span>
+                </Link>
             </DropdownMenuItem>
           </Link>
-          <Link href="/settings/profile">
-            <DropdownMenuItem>
-              <Settings className="mr-2 h-4 w-4" />
-              <span>Configuración</span>
+          <Link href="/settings/profile" passHref>
+            <DropdownMenuItem asChild>
+                <Link href="/settings/profile">
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Configuración</span>
+                </Link>
             </DropdownMenuItem>
           </Link>
         </DropdownMenuGroup>

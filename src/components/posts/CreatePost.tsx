@@ -10,80 +10,59 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
-  DialogClose,
 } from '@/components/ui/dialog';
-import type { MockUser, PostWithAuthor } from '@/lib/types';
+import type { Profile } from '@/lib/types';
+import type { User } from '@supabase/supabase-js';
 import { Loader2, Send } from 'lucide-react';
-import { useRef, useState, type ReactNode } from 'react';
-import { MOCK_USER } from '@/lib/mock-data';
+import { useRef, useState, useTransition, type ReactNode } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import { createPost } from '@/lib/actions/post.actions';
+import { useRouter } from 'next/navigation';
 
 type CreatePostFormProps = {
-    user: MockUser;
-    onPostSuccess: (newPost: PostWithAuthor) => void;
-    onClose: () => void;
+    user: User;
+    profile: Profile;
+    onSuccess: () => void;
 }
 
-function CreatePostForm({ user, onPostSuccess, onClose }: CreatePostFormProps) {
-  const [content, setContent] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+function CreatePostForm({ user, profile, onSuccess }: CreatePostFormProps) {
+  const [isPending, startTransition] = useTransition();
+  const formRef = useRef<HTMLFormElement>(null);
+  const { toast } = useToast();
 
-  const handlePost = async () => {
-    if (!content.trim() || !user) return;
-
-    setIsSubmitting(true);
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    const newPost: PostWithAuthor = {
-        id: `p${Date.now()}`,
-        content,
-        image_url: null,
-        created_at: new Date().toISOString(),
-        author: {
-            id: user.id,
-            username: user.username,
-            full_name: user.full_name,
-            avatar_url: user.avatar_url,
-        },
-        user_has_liked_post: false,
-        likes_count: 0,
-        comments_count: 0
-    };
-
-    console.log('Nueva Publicación:', newPost);
-
-    onPostSuccess(newPost);
-    setContent('');
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-    }
-    setIsSubmitting(false);
-    onClose();
-  };
-
-  const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      setContent(e.target.value);
-      e.target.style.height = 'auto';
-      e.target.style.height = `${e.target.scrollHeight}px`;
+  const handleAction = (formData: FormData) => {
+    startTransition(async () => {
+        const result = await createPost(formData);
+        if (result.error) {
+            toast({
+                title: 'Error',
+                description: result.error,
+                variant: 'destructive',
+            });
+        } else {
+            toast({
+                title: 'Éxito',
+                description: 'Tu publicación ha sido creada.',
+            });
+            formRef.current?.reset();
+            onSuccess();
+        }
+    });
   }
 
-  const avatarUrl = user?.avatar_url;
-  const username = user?.username ?? 'U';
+  const avatarUrl = profile?.avatar_url;
+  const username = profile?.username ?? 'U';
   const fallback = username.charAt(0).toUpperCase();
 
   return (
-    <div className="flex w-full flex-col">
+    <form action={handleAction} ref={formRef}>
         <div className="flex gap-4 p-4">
             <Avatar>
                 <AvatarImage src={avatarUrl ?? undefined} alt={username} />
                 <AvatarFallback>{fallback}</AvatarFallback>
             </Avatar>
             <Textarea
-            ref={textareaRef}
-            value={content}
-            onChange={handleInput}
+            name="content"
             placeholder="¿Qué está pasando?"
             maxLength={280}
             className="w-full min-h-[80px] resize-none border-none bg-transparent p-0 text-lg focus-visible:ring-0"
@@ -91,10 +70,9 @@ function CreatePostForm({ user, onPostSuccess, onClose }: CreatePostFormProps) {
             />
         </div>
         <DialogFooter className="p-4 border-t">
-            <span className="text-sm text-muted-foreground mr-auto">{280 - content.length} caracteres restantes</span>
-            <Button onClick={onClose} variant="ghost">Cancelar</Button>
-            <Button onClick={handlePost} disabled={isSubmitting || content.trim().length === 0}>
-                {isSubmitting ? (
+            {/* <span className="text-sm text-muted-foreground mr-auto">{280 - content.length} caracteres restantes</span> */}
+            <Button type="submit" disabled={isPending}>
+                {isPending ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                     <Send className="mr-2 h-4 w-4" />
@@ -102,12 +80,19 @@ function CreatePostForm({ user, onPostSuccess, onClose }: CreatePostFormProps) {
                 Publicar
             </Button>
         </DialogFooter>
-    </div>
+    </form>
   );
 }
 
-export function CreatePostDialog({ user, children, onPostCreated }: { user: MockUser, children: ReactNode, onPostCreated: (newPost: PostWithAuthor) => void }) {
+export function CreatePostDialog({ user, profile, children }: { user: User, profile: Profile, children: ReactNode }) {
     const [open, setOpen] = useState(false);
+    const router = useRouter();
+
+    const handleSuccess = () => {
+        setOpen(false);
+        router.refresh();
+    }
+    
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
@@ -117,68 +102,56 @@ export function CreatePostDialog({ user, children, onPostCreated }: { user: Mock
                 <DialogHeader className="p-4 border-b">
                     <DialogTitle>Crear Publicación</DialogTitle>
                 </DialogHeader>
-                <CreatePostForm user={user} onPostSuccess={onPostCreated} onClose={() => setOpen(false)} />
+                <CreatePostForm user={user} profile={profile} onSuccess={handleSuccess} />
             </DialogContent>
         </Dialog>
     )
 }
 
 // This is the inline version for the main feed
-export default function CreatePost({ user, onPostCreated }: { user: MockUser, onPostCreated: (newPost: PostWithAuthor) => void }) {
-  const [content, setContent] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+export default function CreatePost({ user, profile }: { user: User, profile: Profile }) {
+  const [isPending, startTransition] = useTransition();
+  const formRef = useRef<HTMLFormElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { toast } = useToast();
+  const router = useRouter();
 
-  const handlePost = async () => {
-    if (!content.trim() || !user) return;
-
-    setIsSubmitting(true);
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    const newPost: PostWithAuthor = {
-        id: `p${Date.now()}`,
-        content,
-        image_url: null,
-        created_at: new Date().toISOString(),
-        author: {
-            id: user.id,
-            username: user.username,
-            full_name: user.full_name,
-            avatar_url: user.avatar_url,
-        },
-        user_has_liked_post: false,
-        likes_count: 0,
-        comments_count: 0
-    };
-
-    console.log('Nueva Publicación:', newPost);
-    onPostCreated(newPost);
-    setContent('');
-    if (textareaRef.current) textareaRef.current.style.height = 'auto';
-    
-    setIsSubmitting(false);
+  const handleAction = async (formData: FormData) => {
+    startTransition(async () => {
+        const result = await createPost(formData);
+        if (result.error) {
+            toast({
+                title: 'Error',
+                description: result.error,
+                variant: 'destructive',
+            });
+        } else {
+            formRef.current?.reset();
+            if(textareaRef.current) textareaRef.current.style.height = 'auto';
+            router.refresh();
+        }
+    });
   };
 
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setContent(e.target.value);
     e.target.style.height = 'auto';
     e.target.style.height = `${e.target.scrollHeight}px`;
   };
 
-  const avatarUrl = user?.avatar_url;
-  const username = user?.username ?? 'U';
+  const avatarUrl = profile?.avatar_url;
+  const username = profile?.username ?? 'U';
   const fallback = username.charAt(0).toUpperCase();
 
   return (
     <div className="flex gap-4 border-b border-border p-4">
       <Avatar>
-        <AvatarImage src={avatarUrl} alt={username} />
+        <AvatarImage src={avatarUrl ?? undefined} alt={username} />
         <AvatarFallback>{fallback}</AvatarFallback>
       </Avatar>
-      <div className="flex w-full flex-col">
+      <form action={handleAction} ref={formRef} className="flex w-full flex-col">
         <Textarea
           ref={textareaRef}
-          value={content}
+          name="content"
           onChange={handleInput}
           placeholder="¿Qué está pasando?"
           maxLength={280}
@@ -186,13 +159,13 @@ export default function CreatePost({ user, onPostCreated }: { user: MockUser, on
           rows={1}
         />
         <div className="mt-2 flex items-center justify-end">
-          <span className="mr-4 text-sm text-muted-foreground">{280 - content.length}</span>
-          <Button onClick={handlePost} disabled={isSubmitting || content.trim().length === 0} size="sm">
-            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {/* <span className="mr-4 text-sm text-muted-foreground">{280 - content.length}</span> */}
+          <Button type="submit" disabled={isPending} size="sm">
+            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Publicar
           </Button>
         </div>
-      </div>
+      </form>
     </div>
   );
 }

@@ -7,13 +7,13 @@ export const metadata = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: { message: string };
+  searchParams: { message: string, code: string, next: string };
 }) {
 
   return (
     <div className="flex h-full w-full items-center justify-center">
       <div className="w-full max-w-sm p-4">
-        <AuthForm message={searchParams.message} />
+        <AuthForm searchParams={searchParams} />
       </div>
     </div>
   );

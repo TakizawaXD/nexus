@@ -1,19 +1,23 @@
-'use client';
-
 import CreatePost from '@/components/posts/CreatePost';
 import Feed from '@/components/posts/Feed';
 import { Separator } from '@/components/ui/separator';
+import * as postActions from '@/lib/actions/post.actions';
 import type { PostWithAuthor } from '@/lib/types';
-import { MOCK_USER, MOCK_POSTS } from '@/lib/mock-data';
-import { useState } from 'react';
+import { createServerClient } from '@/lib/supabase/server';
 
-export default function Home() {
-  const user = MOCK_USER;
-  const [posts, setPosts] = useState<PostWithAuthor[]>(MOCK_POSTS);
+export default async function Home() {
+  const supabase = createServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  const handlePostCreated = (newPost: PostWithAuthor) => {
-    setPosts(prevPosts => [newPost, ...prevPosts]);
-  };
+  const { data: profile } = user ? await supabase.from('profiles').select('*').eq('id', user.id).single() : { data: null };
+
+  const { posts, error } = await postActions.getPosts();
+
+  if (error) {
+    return <div className="p-8 text-center text-destructive">{error}</div>
+  }
 
   return (
     <div className="w-full">
@@ -21,11 +25,11 @@ export default function Home() {
         <h1 className="text-xl font-bold">Inicio</h1>
       </header>
       
-      {user && <CreatePost user={user} onPostCreated={handlePostCreated} />}
+      {user && profile && <CreatePost user={user} profile={profile} />}
 
       <Separator />
 
-      <Feed serverPosts={posts} user={user}/>
+      <Feed serverPosts={posts as PostWithAuthor[]} user={user}/>
     </div>
   );
 }

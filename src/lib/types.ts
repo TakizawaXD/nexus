@@ -1,32 +1,16 @@
 import type { User as SupabaseUser } from '@supabase/supabase-js';
+import { Database } from './database.types';
 
 export type User = SupabaseUser;
 
-export type Profile = {
-  id: string;
-  username: string;
-  full_name: string | null;
-  avatar_url: string | null;
-  followers_count?: number;
-  following_count?: number;
-  bio?: string | null;
-};
+export type Profile = Database['public']['Tables']['profiles']['Row'];
 
-export type PostWithAuthor = {
-  id: string;
-  content: string;
-  image_url: string | null;
-  created_at: string;
-  author: Profile;
-  user_has_liked_post: boolean;
-  likes_count: number;
-  comments_count: number;
-};
+export type Post = Database['public']['Tables']['posts']['Row'];
 
-export type CommentWithAuthor = {
-  id: string;
-  post_id: string;
-  content: string;
-  created_at: string;
-  author: Profile;
-};
+export type Like = Database['public']['Tables']['likes']['Row'];
+
+export type Comment = Database['public']['Tables']['comments']['Row'];
+
+export type PostWithAuthor = Database['public']['Views']['posts_with_author']['Row'];
+
+export type CommentWithAuthor = Database['public']['Views']['comments_with_author']['Row'];

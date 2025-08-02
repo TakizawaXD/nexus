@@ -1,35 +1,51 @@
 'use client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import type { PostWithAuthor, MockUser } from '@/lib/types';
+import type { PostWithAuthor } from '@/lib/types';
+import type { User } from '@supabase/supabase-js';
 import { formatDistanceToNowStrict } from 'date-fns';
+import { es } from 'date-fns/locale';
 import { MessageCircle, Heart } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useTransition } from 'react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import PostActions from './PostActions';
+import { useToast } from '@/hooks/use-toast';
+import { toggleLike } from '@/lib/actions/post.actions';
 
-export default function PostCard({ post, user }: { post: PostWithAuthor, user: MockUser | null }) {
+export default function PostCard({ post, user }: { post: PostWithAuthor, user: User | null }) {
     const [optimisticLikes, setOptimisticLikes] = useState(post.likes_count);
     const [optimisticHasLiked, setOptimisticHasLiked] = useState(post.user_has_liked_post);
     const [isLikePending, startLikeTransition] = useTransition();
     const router = useRouter();
+    const { toast } = useToast();
 
     const handleLike = () => {
         if (!user) {
             return router.push('/login');
         }
+        if (isLikePending) return;
 
         startLikeTransition(async () => {
-            if (optimisticHasLiked) {
-                setOptimisticHasLiked(false);
-                setOptimisticLikes((l) => l - 1);
-                // API call to unlike
-            } else {
-                setOptimisticHasLiked(true);
-                setOptimisticLikes((l) => l + 1);
-                // API call to like
+            // Optimistic update
+            const originalLikes = optimisticLikes;
+            const originalHasLiked = optimisticHasLiked;
+            
+            setOptimisticHasLiked(prev => !prev);
+            setOptimisticLikes(prev => (optimisticHasLiked ? prev - 1 : prev + 1));
+            
+            const result = await toggleLike(post.id, optimisticHasLiked);
+
+            if (result.error) {
+                // Revert optimistic update on error
+                setOptimisticLikes(originalLikes);
+                setOptimisticHasLiked(originalHasLiked);
+                toast({
+                    title: "Error",
+                    description: result.error,
+                    variant: "destructive"
+                });
             }
         });
     }
@@ -57,7 +73,8 @@ export default function PostCard({ post, user }: { post: PostWithAuthor, user: M
                 <Link href={`/post/${post.id}`} className="text-sm text-muted-foreground hover:underline">
                     <time dateTime={postDate.toISOString()} title={postDate.toLocaleString()}>
                         {formatDistanceToNowStrict(postDate, {
-                        addSuffix: true,
+                            addSuffix: true,
+                            locale: es,
                         })}
                     </time>
                 </Link>
