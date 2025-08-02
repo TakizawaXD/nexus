@@ -1,36 +1,46 @@
 import CreatePost from '@/components/posts/CreatePost';
 import Feed from '@/components/posts/Feed';
 import { Separator } from '@/components/ui/separator';
-import { MOCK_POSTS, MOCK_USER } from '@/lib/mock-data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { getPosts } from '@/lib/actions/post.actions';
+import { getAuthProfile } from '@/lib/actions/user.actions';
 
 export default async function Home() {
-  const profile = MOCK_USER;
-
-  const forYouPosts = MOCK_POSTS;
-  const followingPosts = MOCK_POSTS.filter(p => p.author.id !== '3');
+  const profile = await getAuthProfile();
+  
+  const forYouPostsResult = await getPosts('foryou');
+  const followingPostsResult = await getPosts('following');
 
   return (
     <Tabs defaultValue="foryou">
       <header className="sticky top-0 z-10 border-b bg-background/80 px-4 py-2 backdrop-blur-md">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="foryou">Para ti</TabsTrigger>
-          <TabsTrigger value="following">Siguiendo</TabsTrigger>
+          <TabsTrigger value="following" disabled={!profile}>Siguiendo</TabsTrigger>
         </TabsList>
       </header>
       
-      <CreatePost profile={profile} />
-      <Separator />
+      {profile && (
+        <>
+          <CreatePost profile={profile} />
+          <Separator />
+        </>
+      )}
+
 
       <TabsContent value="foryou">
-        <Feed serverPosts={forYouPosts} user={profile} />
+        <Feed serverPosts={forYouPostsResult.posts} user={profile} />
       </TabsContent>
       <TabsContent value="following">
-        {followingPosts.length > 0 ? (
-          <Feed serverPosts={followingPosts} user={profile} />
+        {followingPostsResult.posts.length > 0 ? (
+          <Feed serverPosts={followingPostsResult.posts} user={profile} />
         ) : (
           <div className="p-8 text-center text-muted-foreground">
-            <p>Las publicaciones de las personas que sigues aparecerán aquí.</p>
+            {profile ? (
+              <p>Las publicaciones de las personas que sigues aparecerán aquí.</p>
+            ) : (
+              <p>Inicia sesión para ver las publicaciones de las personas que sigues.</p>
+            )}
           </div>
         )}
       </TabsContent>

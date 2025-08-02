@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { ThemeProvider } from '@/components/theme/ThemeProvider';
 import Sidebar from '@/components/layout/Sidebar';
 import RightSidebar from '@/components/layout/RightSidebar';
+import { getAuthProfile } from '@/lib/actions/user.actions';
 
 export const metadata: Metadata = {
   title: {
@@ -14,11 +15,13 @@ export const metadata: Metadata = {
   description: 'Una red social minimalista construida con Next.js.',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const profile = await getAuthProfile();
+
   return (
     <html lang="es" suppressHydrationWarning>
       <head>
@@ -36,7 +39,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <div className="flex min-h-screen w-full justify-center">
-            <Sidebar />
+            <Sidebar profile={profile} />
             <main className="flex flex-1">
               <div className="flex-1 max-w-2xl border-x border-border">
                 {children}

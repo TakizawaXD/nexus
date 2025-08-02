@@ -1,8 +1,6 @@
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 
-// Re-defining basic types as Supabase types are no longer the source of truth
-export type User = SupabaseUser;
-
+// Now Profile is the main source of truth for user-related data in the app
 export type Profile = {
   id: string;
   updated_at?: string | null;
@@ -14,6 +12,9 @@ export type Profile = {
   followers_count?: number;
   following_count?: number;
 };
+
+// We can keep the Supabase user type if we need to access auth-specific details
+export type User = SupabaseUser;
 
 export type Post = {
   id: string;
@@ -37,6 +38,7 @@ export type Comment = {
   post_id: string;
 };
 
+// These composite types are very useful for joining data
 export type PostWithAuthor = Post & {
   author: Profile;
   likes_count: number;
@@ -47,10 +49,3 @@ export type PostWithAuthor = Post & {
 export type CommentWithAuthor = Comment & {
   author: Profile;
 };
-
-// MockUser can be removed if not needed elsewhere, but it's good for local testing.
-export interface MockUser extends User {
-  username: string;
-  full_name: string;
-  avatar_url: string;
-}

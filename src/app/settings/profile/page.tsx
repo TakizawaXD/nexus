@@ -1,10 +1,15 @@
 import { Separator } from "@/components/ui/separator"
 import { ProfileForm } from "../_components/profile-form"
-import { MOCK_USER } from "@/lib/mock-data"
-import { Profile } from "@/lib/types"
+import type { Profile } from "@/lib/types"
+import { getAuthProfile } from "@/lib/actions/user.actions"
+import { notFound } from "next/navigation";
 
 export default async function SettingsProfilePage() {
-    const profile = MOCK_USER as Profile;
+    const profile = await getAuthProfile();
+
+    if (!profile) {
+        notFound();
+    }
     
     return (
         <div className="space-y-6">
@@ -15,7 +20,7 @@ export default async function SettingsProfilePage() {
                 </p>
             </div>
             <Separator />
-            <ProfileForm profile={profile} />
+            <ProfileForm profile={profile as Profile} />
         </div>
     )
 }

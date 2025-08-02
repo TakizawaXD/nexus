@@ -1,23 +1,23 @@
 import CommentCard from "@/components/comments/CommentCard";
 import CreateComment from "@/components/comments/CreateComment";
 import PostCard from "@/components/posts/PostCard";
-import { Separator } from "@/components/ui/separator";
 import type { PostWithAuthor } from "@/lib/types";
 import { notFound } from "next/navigation";
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
-import { MOCK_POSTS, MOCK_COMMENTS, MOCK_USER } from "@/lib/mock-data";
+import { getPostById, getCommentsByPostId } from "@/lib/actions/post.actions";
+import { getAuthProfile } from "@/lib/actions/user.actions";
 
 export default async function PostPage({ params }: { params: { id: string }}) {
-    const user = MOCK_USER;
-    const post = MOCK_POSTS.find(p => p.id === params.id) as PostWithAuthor | undefined;
-
+    const user = await getAuthProfile();
+    const { post } = await getPostById(params.id);
+    
     if (!post) {
         notFound();
     }
     
-    const comments = MOCK_COMMENTS.filter(c => c.post_id === params.id);
+    const { comments } = await getCommentsByPostId(params.id);
 
     return (
         <>

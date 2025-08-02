@@ -10,9 +10,10 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
+  DialogClose,
 } from '@/components/ui/dialog';
 import type { Profile } from '@/lib/types';
-import { Loader2, Send } from 'lucide-react';
+import { Loader2, X } from 'lucide-react';
 import { useRef, useState, useTransition, type ReactNode } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
@@ -38,7 +39,7 @@ function CreatePostForm({ profile, onSuccess }: CreatePostFormProps) {
                 variant: 'destructive',
             });
         } else {
-             toast({
+            toast({
                 title: 'Éxito',
                 description: 'Tu publicación ha sido creada.',
             });
@@ -69,11 +70,7 @@ function CreatePostForm({ profile, onSuccess }: CreatePostFormProps) {
         </div>
         <DialogFooter className="p-4 border-t">
             <Button type="submit" disabled={isPending} className="rounded-full">
-                {isPending ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                    null
-                )}
+                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Publicar
             </Button>
         </DialogFooter>
@@ -96,8 +93,13 @@ export function CreatePostDialog({ profile, children }: { profile: Profile, chil
                 {children}
             </DialogTrigger>
             <DialogContent className="sm:max-w-xl p-0 gap-0">
-                <DialogHeader className="p-4 border-b">
+                <DialogHeader className="p-4 border-b flex flex-row items-center justify-between">
                     <DialogTitle>Crear Publicación</DialogTitle>
+                    <DialogClose asChild>
+                      <Button variant="ghost" size="icon" className='h-6 w-6'>
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </DialogClose>
                 </DialogHeader>
                 <CreatePostForm profile={profile} onSuccess={handleSuccess} />
             </DialogContent>
@@ -154,7 +156,7 @@ export default function CreatePost({ profile }: { profile: Profile }) {
         <Textarea
           ref={textareaRef}
           name="content"
-          onChange={handleInput}
+          onInput={handleInput}
           placeholder="¿Qué novedades tienes?"
           maxLength={280}
           className="w-full resize-none border-none bg-transparent p-0 text-lg focus-visible:ring-0"

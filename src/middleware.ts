@@ -54,9 +54,19 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // Refresh session if expired - required for Server Components
-  // https://supabase.com/docs/guides/auth/auth-helpers/nextjs#managing-session-with-middleware
-  await supabase.auth.getSession();
+  const { data: { session } } = await supabase.auth.getSession();
+
+  const { pathname } = request.nextUrl;
+
+  const protectedRoutes = ['/settings'];
+
+  if (!session && protectedRoutes.some(route => pathname.startsWith(route))) {
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
+  
+  if (session && (pathname === '/login' || pathname === '/register')) {
+    return NextResponse.redirect(new URL('/', request.url));
+  }
 
   return response;
 }
