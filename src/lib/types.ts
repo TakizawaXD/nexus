@@ -1,12 +1,6 @@
-// This represents the currently logged-in user.
-// In a real app, this would be based on your auth session.
-export type MockUser = {
-  id: string;
-  email?: string;
-  username: string;
-  full_name: string | null;
-  avatar_url: string | null;
-} | null;
+import type { User as SupabaseUser } from '@supabase/supabase-js';
+
+export type User = SupabaseUser;
 
 export type Profile = {
   id: string;

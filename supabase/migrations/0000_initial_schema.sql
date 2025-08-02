@@ -1,183 +1,180 @@
--- Create profiles table
-CREATE TABLE profiles (
-  id uuid REFERENCES auth.users ON DELETE CASCADE NOT NULL PRIMARY KEY,
-  updated_at timestamp with time zone,
-  username text UNIQUE,
-  full_name text,
-  avatar_url text,
-  website text,
-  followers_count integer DEFAULT 0,
-  following_count integer DEFAULT 0,
+-- Create Profiles Table
+-- This table will store user profile information.
+create table
+  public.profiles (
+    id uuid not null,
+    username text not null,
+    full_name text null,
+    avatar_url text null,
+    updated_at timestamp with time zone null,
+    constraint profiles_pkey primary key (id),
+    constraint profiles_username_key unique (username),
+    constraint profiles_id_fkey foreign key (id) references auth.users (id) on delete cascade,
+    constraint username_length check (char_length(username) >= 3)
+  ) tablespace pg_default;
 
-  CONSTRAINT username_length CHECK (char_length(username) >= 3)
-);
+-- Create Posts Table
+-- This table will store all the posts created by users.
+create table
+  public.posts (
+    id uuid not null default gen_random_uuid (),
+    user_id uuid not null,
+    content text not null,
+    image_url text null,
+    created_at timestamp with time zone not null default now(),
+    constraint posts_pkey primary key (id),
+    constraint posts_user_id_fkey foreign key (user_id) references public.profiles (id) on delete cascade,
+    constraint content_length check (char_length(content) <= 280)
+  ) tablespace pg_default;
 
--- RLS for profiles
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Public profiles are viewable by everyone." ON profiles FOR SELECT USING (true);
-CREATE POLICY "Users can insert their own profile." ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
-CREATE POLICY "Users can update their own profile." ON profiles FOR UPDATE USING (auth.uid() = id);
-
-
--- Function to handle new user signup
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
-DECLARE
-  username_from_email TEXT;
-BEGIN
-  username_from_email := split_part(new.email, '@', 1);
-  WHILE EXISTS (SELECT 1 FROM public.profiles WHERE username = username_from_email) LOOP
-    username_from_email := username_from_email || '_' || substr(md5(random()::text), 1, 4);
-  END LOOP;
+-- Create Comments Table
+-- This table stores comments on posts.
+create table
+  public.comments (
+    id uuid not null default gen_random_uuid (),
+    user_id uuid not null,
+    post_id uuid not null,
+    content text not null,
+    created_at timestamp with time zone not null default now(),
+    constraint comments_pkey primary key (id),
+    constraint comments_post_id_fkey foreign key (post_id) references public.posts (id) on delete cascade,
+    constraint comments_user_id_fkey foreign key (user_id) references public.profiles (id) on delete cascade
+  ) tablespace pg_default;
   
-  INSERT INTO public.profiles (id, full_name, avatar_url, username)
-  VALUES (
-    new.id,
-    new.raw_user_meta_data->>'full_name',
-    new.raw_user_meta_data->>'avatar_url',
-    COALESCE(new.raw_user_meta_data->>'username', username_from_email)
-  );
-  RETURN new;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+-- Create Likes Table
+-- This table tracks which users have liked which posts.
+create table
+  public.likes (
+    user_id uuid not null,
+    post_id uuid not null,
+    created_at timestamp with time zone not null default now(),
+    constraint likes_pkey primary key (user_id, post_id),
+    constraint likes_post_id_fkey foreign key (post_id) references public.posts (id) on delete cascade,
+    constraint likes_user_id_fkey foreign key (user_id) references public.profiles (id) on delete cascade
+  ) tablespace pg_default;
 
--- Trigger for new user
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
-
-
--- Create posts table
-CREATE TABLE posts (
-  id uuid DEFAULT gen_random_uuid() NOT NULL PRIMARY KEY,
-  user_id uuid REFERENCES public.profiles ON DELETE CASCADE NOT NULL,
-  content text NOT NULL,
-  image_url text,
-  created_at timestamp with time zone DEFAULT now() NOT NULL,
-  likes_count integer DEFAULT 0,
-  comments_count integer DEFAULT 0,
-
-  CONSTRAINT post_content_length CHECK (char_length(content) <= 280)
-);
-
--- RLS for posts
-ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Posts are viewable by everyone." ON posts FOR SELECT USING (true);
-CREATE POLICY "Users can insert their own posts." ON posts FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can update their own posts." ON posts FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "Users can delete their own posts." ON posts FOR DELETE USING (auth.uid() = user_id);
-
-
--- Create likes table
-CREATE TABLE likes (
-  id uuid DEFAULT gen_random_uuid() NOT NULL PRIMARY KEY,
-  user_id uuid REFERENCES public.profiles ON DELETE CASCADE NOT NULL,
-  post_id uuid REFERENCES public.posts ON DELETE CASCADE NOT NULL,
-  created_at timestamp with time zone DEFAULT now() NOT NULL,
+-- Create Follows Table
+-- This table tracks follower relationships.
+create table
+  public.follows (
+    follower_id uuid not null,
+    following_id uuid not null,
+    created_at timestamp with time zone not null default now(),
+    constraint follows_pkey primary key (follower_id, following_id),
+    constraint follows_follower_id_fkey foreign key (follower_id) references public.profiles (id) on delete cascade,
+    constraint follows_following_id_fkey foreign key (following_id) references public.profiles (id) on delete cascade
+  ) tablespace pg_default;
   
-  CONSTRAINT likes_unique UNIQUE (user_id, post_id)
-);
+-- Set up Row Level Security (RLS)
+-- See https://supabase.com/docs/guides/auth/row-level-security
+alter table public.profiles enable row level security;
+alter table public.posts enable row level security;
+alter table public.comments enable row level security;
+alter table public.likes enable row level security;
+alter table public.follows enable row level security;
 
--- RLS for likes
-ALTER TABLE likes ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Likes are viewable by everyone." ON likes FOR SELECT USING (true);
-CREATE POLICY "Users can insert their own likes." ON likes FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can delete their own likes." ON likes FOR DELETE USING (auth.uid() = user_id);
+-- Policies for Profiles Table
+create policy "Public profiles are viewable by everyone." on public.profiles for select using (true);
+create policy "Users can insert their own profile." on public.profiles for insert with check (auth.uid () = id);
+create policy "Users can update own profile." on public.profiles for update using (auth.uid () = id);
 
+-- Policies for Posts Table
+create policy "Posts are viewable by everyone." on public.posts for select using (true);
+create policy "Users can insert their own posts." on public.posts for insert with check (auth.uid () = user_id);
+create policy "Users can update their own posts." on public.posts for update with check (auth.uid () = user_id);
+create policy "Users can delete their own posts." on public.posts for delete using (auth.uid () = user_id);
 
--- Create comments table
-CREATE TABLE comments (
-  id uuid DEFAULT gen_random_uuid() NOT NULL PRIMARY KEY,
-  user_id uuid REFERENCES public.profiles ON DELETE CASCADE NOT NULL,
-  post_id uuid REFERENCES public.posts ON DELETE CASCADE NOT NULL,
-  content text NOT NULL,
-  created_at timestamp with time zone DEFAULT now() NOT NULL,
+-- Policies for Comments Table
+create policy "Comments are viewable by everyone." on public.comments for select using (true);
+create policy "Users can insert comments." on public.comments for insert with check (auth.uid () = user_id);
+create policy "Users can delete their own comments." on public.comments for delete using (auth.uid () = user_id);
 
-  CONSTRAINT comment_content_length CHECK (char_length(content) > 0)
-);
+-- Policies for Likes Table
+create policy "Likes are viewable by everyone." on public.likes for select using (true);
+create policy "Users can insert their own likes." on public.likes for insert with check (auth.uid () = user_id);
+create policy "Users can delete their own likes." on public.likes for delete using (auth.uid () = user_id);
 
--- RLS for comments
-ALTER TABLE comments ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Comments are viewable by everyone." ON comments FOR SELECT USING (true);
-CREATE POLICY "Users can insert their own comments." ON comments FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can delete their own comments." ON comments FOR DELETE USING (auth.uid() = user_id);
-
-
--- Create followers table
-CREATE TABLE followers (
-  follower_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
-  following_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
-  created_at timestamp with time zone DEFAULT now() NOT NULL,
-
-  PRIMARY KEY (follower_id, following_id)
-);
-
--- RLS for followers
-ALTER TABLE followers ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Follower relationships are public." ON public.followers FOR SELECT USING (true);
-CREATE POLICY "Users can follow other users." ON public.followers FOR INSERT WITH CHECK (auth.uid() = follower_id);
-CREATE POLICY "Users can unfollow other users." ON public.followers FOR DELETE USING (auth.uid() = follower_id);
+-- Policies for Follows Table
+create policy "Follows are viewable by everyone." on public.follows for select using (true);
+create policy "Users can insert their own follow records." on public.follows for insert with check (auth.uid () = follower_id);
+create policy "Users can delete their own follow records." on public.follows for delete using (auth.uid () = follower_id);
 
 
--- Function and Trigger to update likes_count on posts
-CREATE OR REPLACE FUNCTION update_likes_count()
-RETURNS TRIGGER AS $$
-BEGIN
-  IF TG_OP = 'INSERT' THEN
-    UPDATE posts SET likes_count = likes_count + 1 WHERE id = NEW.post_id;
-  ELSIF TG_OP = 'DELETE' THEN
-    UPDATE posts SET likes_count = likes_count - 1 WHERE id = OLD.post_id;
-  END IF;
-  RETURN NULL;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+-- Trigger to create a profile for a new user
+-- This trigger automatically creates a profile row when a new user signs up.
+create function public.handle_new_user() returns trigger as $$
+begin
+  insert into public.profiles (id, username)
+  values (new.id, new.raw_user_meta_data->>'username');
+  return new;
+end;
+$$ language plpgsql security definer;
 
-CREATE TRIGGER on_like_change
-AFTER INSERT OR DELETE ON likes
-FOR EACH ROW EXECUTE PROCEDURE update_likes_count();
+create trigger on_auth_user_created
+after insert on auth.users for each row
+execute procedure public.handle_new_user();
 
+-- Stored procedure to get posts with author info and like/comment counts
+create or replace function get_posts_with_details(auth_user_id uuid)
+returns table (
+    id uuid,
+    content text,
+    image_url text,
+    created_at timestamp with time zone,
+    author json,
+    user_has_liked_post boolean,
+    likes_count bigint,
+    comments_count bigint
+) as $$
+begin
+    return query
+    select
+        p.id,
+        p.content,
+        p.image_url,
+        p.created_at,
+        json_build_object(
+            'id', pr.id,
+            'username', pr.username,
+            'full_name', pr.full_name,
+            'avatar_url', pr.avatar_url
+        ),
+        exists(select 1 from likes l where l.post_id = p.id and l.user_id = auth_user_id),
+        (select count(*) from likes l where l.post_id = p.id),
+        (select count(*) from comments c where c.post_id = p.id)
+    from
+        posts p
+    join
+        profiles pr on p.user_id = pr.id
+    order by
+        p.created_at desc;
+end;
+$$ language plpgsql;
 
--- Function and Trigger to update comments_count on posts
-CREATE OR REPLACE FUNCTION update_comments_count()
-RETURNS TRIGGER AS $$
-BEGIN
-  IF TG_OP = 'INSERT' THEN
-    UPDATE posts SET comments_count = comments_count + 1 WHERE id = NEW.post_id;
-  ELSIF TG_OP = 'DELETE' THEN
-    UPDATE posts SET comments_count = comments_count - 1 WHERE id = OLD.post_id;
-  END IF;
-  RETURN NULL;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE TRIGGER on_comment_change
-AFTER INSERT OR DELETE ON comments
-FOR EACH ROW EXECUTE PROCEDURE update_comments_count();
-
-
--- Function and Trigger to update follower/following counts on profiles
-CREATE OR REPLACE FUNCTION update_follow_counts()
-RETURNS TRIGGER AS $$
-BEGIN
-  IF TG_OP = 'INSERT' THEN
-    UPDATE profiles SET following_count = following_count + 1 WHERE id = NEW.follower_id;
-    UPDATE profiles SET followers_count = followers_count + 1 WHERE id = NEW.following_id;
-  ELSIF TG_OP = 'DELETE' THEN
-    UPDATE profiles SET following_count = following_count - 1 WHERE id = OLD.follower_id;
-    UPDATE profiles SET followers_count = followers_count - 1 WHERE id = OLD.following_id;
-  END IF;
-  RETURN NULL;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE TRIGGER on_follow_change
-AFTER INSERT OR DELETE ON followers
-FOR EACH ROW EXECUTE PROCEDURE update_follow_counts();
-
--- Enable Realtime on tables
-BEGIN;
-  ALTER PUBLICATION supabase_realtime ADD TABLE posts;
-  ALTER PUBLICATION supabase_realtime ADD TABLE comments;
-  ALTER PUBLICATION supabase_realtime ADD TABLE likes;
-  ALTER PUBLICATION supabase_realtime ADD TABLE followers;
-COMMIT;
+-- Stored procedure to get user profile details with follow counts
+create or replace function get_profile_with_details(p_username text, auth_user_id uuid)
+returns table (
+    id uuid,
+    username text,
+    full_name text,
+    avatar_url text,
+    followers_count bigint,
+    following_count bigint,
+    is_following boolean
+) as $$
+begin
+    return query
+    select
+        pr.id,
+        pr.username,
+        pr.full_name,
+        pr.avatar_url,
+        (select count(*) from follows f where f.following_id = pr.id),
+        (select count(*) from follows f where f.follower_id = pr.id),
+        exists(select 1 from follows f where f.follower_id = auth_user_id and f.following_id = pr.id)
+    from
+        profiles pr
+    where
+        pr.username = p_username;
+end;
+$$ language plpgsql;
