@@ -1,22 +1,19 @@
 'use client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import type { PostWithAuthor } from '@/lib/types';
+import type { PostWithAuthor, MockUser } from '@/lib/types';
 import { formatDistanceToNowStrict } from 'date-fns';
 import { MessageCircle, Heart } from 'lucide-react';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/client';
 import { useState, useTransition } from 'react';
 import { cn } from '@/lib/utils';
-import type { User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 import PostActions from './PostActions';
 
-export default function PostCard({ post, user }: { post: PostWithAuthor, user: User | null }) {
+export default function PostCard({ post, user }: { post: PostWithAuthor, user: MockUser | null }) {
     const [optimisticLikes, setOptimisticLikes] = useState(post.likes_count);
     const [optimisticHasLiked, setOptimisticHasLiked] = useState(post.user_has_liked_post);
     const [isLikePending, startLikeTransition] = useTransition();
-    const supabase = createClient();
     const router = useRouter();
 
     const handleLike = () => {
@@ -28,11 +25,11 @@ export default function PostCard({ post, user }: { post: PostWithAuthor, user: U
             if (optimisticHasLiked) {
                 setOptimisticHasLiked(false);
                 setOptimisticLikes((l) => l - 1);
-                await supabase.from('likes').delete().match({ user_id: user.id, post_id: post.id });
+                // API call to unlike
             } else {
                 setOptimisticHasLiked(true);
                 setOptimisticLikes((l) => l + 1);
-                await supabase.from('likes').insert({ user_id: user.id, post_id: post.id });
+                // API call to like
             }
         });
     }

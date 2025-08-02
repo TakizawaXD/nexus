@@ -2,21 +2,17 @@ import CommentCard from "@/components/comments/CommentCard";
 import CreateComment from "@/components/comments/CreateComment";
 import PostCard from "@/components/posts/PostCard";
 import { Separator } from "@/components/ui/separator";
-import { createClient } from "@/lib/supabase/server";
 import type { CommentWithAuthor, PostWithAuthor } from "@/lib/types";
-import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
+import { MOCK_USER, MOCK_POSTS, MOCK_COMMENTS } from '@/lib/mock-data';
 
 export const revalidate = 0;
 
 export async function generateMetadata({ params }: { params: { id: string } }) {
-    const cookieStore = cookies();
-    const supabase = createClient(cookieStore);
-
-    const { data: post } = await supabase.from('posts').select('content, author:profiles(username)').eq('id', params.id).single();
+    const post = MOCK_POSTS.find(p => p.id === params.id);
 
     if (!post || !post.author) {
         return { title: 'Post not found' };
@@ -29,39 +25,18 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
 
 
 export default async function PostPage({ params }: { params: { id: string } }) {
-    const cookieStore = cookies();
-    const supabase = createClient(cookieStore);
-
-    const { data: { user } } = await supabase.auth.getUser();
-
-    const { data: postData } = await supabase
-        .from('posts')
-        .select('*, author:profiles(*), likes(user_id)')
-        .eq('id', params.id)
-        .single();
+    const user = MOCK_USER;
+    const postData = MOCK_POSTS.find(p => p.id === params.id);
     
     if (!postData) {
         notFound();
     }
 
-    const post: PostWithAuthor = {
-        ...postData,
-        author: Array.isArray(postData.author) ? postData.author[0] : postData.author,
-        user_has_liked_post: !!user && postData.likes.some(
-            (like: any) => like.user_id === user?.id
-        ),
-    };
+    const post: PostWithAuthor = postData;
 
-    const { data: commentsData } = await supabase
-        .from('comments')
-        .select('*, author:profiles(*)')
-        .eq('post_id', params.id)
-        .order('created_at', { ascending: true });
+    const commentsData = MOCK_COMMENTS.filter(c => c.post_id === params.id);
 
-    const comments: CommentWithAuthor[] = commentsData?.map(comment => ({
-        ...comment,
-        author: Array.isArray(comment.author) ? comment.author[0] : comment.author,
-    })) ?? [];
+    const comments: CommentWithAuthor[] = commentsData;
 
     return (
         <div className="w-full">

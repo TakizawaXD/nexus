@@ -1,12 +1,11 @@
 import PostCard from '@/components/posts/PostCard';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { createClient } from '@/lib/supabase/server';
 import type { PostWithAuthor } from '@/lib/types';
-import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { User } from 'lucide-react';
 import FollowButton from '@/components/users/FollowButton';
 import { Separator } from '@/components/ui/separator';
+import { MOCK_USER, MOCK_PROFILES, MOCK_POSTS } from '@/lib/mock-data';
 
 export async function generateMetadata({ params }: { params: { username: string } }) {
     return {
@@ -19,48 +18,17 @@ export default async function ProfilePage({
 }: {
   params: { username: string };
 }) {
-  const cookieStore = cookies();
-  const supabase = createClient(cookieStore);
+  const authUser = MOCK_USER;
   
-  const {
-    data: { user: authUser },
-  } = await supabase.auth.getUser();
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*, followers_count, following_count')
-    .eq('username', params.username)
-    .single();
+  const profile = MOCK_PROFILES.find(p => p.username === params.username);
 
   if (!profile) {
     notFound();
   }
   
-  let isFollowing = false;
-  if (authUser) {
-    const { data: followingRelation } = await supabase
-      .from('followers')
-      .select('follower_id')
-      .eq('follower_id', authUser.id)
-      .eq('following_id', profile.id)
-      .maybeSingle();
-    isFollowing = !!followingRelation;
-  }
+  const isFollowing = false; // Mock data
 
-  const { data: posts } = await supabase
-    .from('posts')
-    .select('*, author:profiles(*), likes(user_id)')
-    .eq('user_id', profile.id)
-    .order('created_at', { ascending: false });
-
-  const userPosts: PostWithAuthor[] =
-    posts?.map((post) => ({
-      ...post,
-      author: Array.isArray(post.author) ? post.author[0] : post.author,
-      user_has_liked_post: !!authUser && post.likes.some(
-        (like) => like.user_id === authUser?.id
-      ),
-    })) ?? [];
+  const userPosts: PostWithAuthor[] = MOCK_POSTS.filter(p => p.author.id === profile.id)
 
   return (
     <div>

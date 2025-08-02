@@ -1,6 +1,3 @@
-import { createClient } from '@/lib/supabase/server';
-import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
 import AuthForm from '@/components/auth/AuthForm';
 
 export const metadata = {
@@ -12,16 +9,6 @@ export default async function LoginPage({
 }: {
   searchParams: { message: string };
 }) {
-  const cookieStore = cookies();
-  const supabase = createClient(cookieStore);
-
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (session) {
-    redirect('/');
-  }
 
   return (
     <div className="flex h-full w-full items-center justify-center">

@@ -1,22 +1,16 @@
 import { Home, User, PenSquare, LogIn } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '../ui/button';
-import { createClient } from '@/lib/supabase/server';
-import { cookies } from 'next/headers';
 import UserNav from '../auth/UserNav';
 import { NexoLogo } from '../shared/NexoLogo';
 import { CreatePostDialog } from '../posts/CreatePost';
+import { MOCK_USER } from '@/lib/mock-data';
 
 export default async function Sidebar() {
-  const cookieStore = cookies();
-  const supabase = createClient(cookieStore);
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const { data: profile } = user
-    ? await supabase.from('profiles').select('username').eq('id', user.id).single()
-    : { data: null };
+  // We'll use a mock user object. In a real app, you'd get this from your auth provider.
+  // Set to null to test the logged-out state.
+  const user = MOCK_USER; 
+  const profile = user ? { username: user.username } : null;
 
   const navItems = [
     { href: '/', icon: Home, label: 'Home', auth: false },

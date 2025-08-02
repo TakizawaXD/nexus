@@ -3,7 +3,6 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { createClient } from '@/lib/supabase/client';
 import { AtSign, KeyRound, Loader2, User } from 'lucide-react';
 import { useState } from 'react';
 import {
@@ -14,63 +13,41 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { NexoLogo } from '../shared/NexoLogo';
+import { useRouter } from 'next/navigation';
 
 export default function AuthForm({ message }: { message?: string }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSignUp, setIsSignUp] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const router = useRouter();
 
-  const supabase = createClient();
 
   const handleAuthAction = async (formData: FormData) => {
     setIsSubmitting(true);
     setError(null);
     setSuccessMessage(null);
-    const email = formData.get('email') as string;
-    const password = formData.get('password') as string;
-
-    if (isSignUp) {
-      const username = formData.get('username') as string;
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            username: username,
-            // You can add full_name and avatar_url here if you have fields for them
-          },
-        },
-      });
-
-      if (error) {
-        setError(error.message);
-      } else {
-        setSuccessMessage('Check your email for the confirmation link.');
-      }
-    } else { // Sign In
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        setError(error.message);
-      } else {
-        window.location.href = '/';
-      }
-    }
-    setIsSubmitting(false);
+    
+    // Mock authentication
+    setTimeout(() => {
+        if (isSignUp) {
+            setSuccessMessage('Account created successfully! You can now sign in.');
+            setIsSignUp(false);
+        } else {
+            // Simulate successful login and redirect
+            router.push('/');
+        }
+        setIsSubmitting(false);
+    }, 1000);
   };
 
   const handleGoogleSignIn = async () => {
     setIsSubmitting(true);
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${location.origin}/auth/callback`,
-      },
-    });
+    // Mock Google sign in
+    setTimeout(() => {
+        router.push('/');
+        setIsSubmitting(false);
+    }, 1000);
   };
 
   return (

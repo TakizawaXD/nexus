@@ -12,39 +12,33 @@ import {
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
-import { createClient } from '@/lib/supabase/client';
-import type { User } from '@supabase/supabase-js';
+import type { MockUser } from '@/lib/types';
 import { Loader2, Send } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useRef, useState, type ReactNode } from 'react';
 
-function CreatePostForm({ user, onPostSuccess }: { user: User, onPostSuccess: () => void }) {
+function CreatePostForm({ user, onPostSuccess }: { user: MockUser, onPostSuccess: () => void }) {
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  
-  const supabase = createClient();
   const router = useRouter();
 
   const handlePost = async () => {
     if (content.trim().length === 0) return;
 
     setIsSubmitting(true);
-    const { error } = await supabase
-      .from('posts')
-      .insert({ content: content, user_id: user.id });
+    // This is where you would call your API to create a post.
+    // We'll simulate it with a timeout.
+    await new Promise(resolve => setTimeout(resolve, 500));
 
-    if (!error) {
-      setContent('');
-      if (textareaRef.current) {
-        textareaRef.current.style.height = 'auto';
-      }
-      onPostSuccess();
-      router.refresh(); // Refresh server components
-    } else {
-        console.error(error);
-        // TODO: show toast error
+    console.log('New Post:', { content, userId: user.id });
+
+    setContent('');
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
     }
+    onPostSuccess();
+    router.refresh(); // Refresh to see the new (mock) post
     setIsSubmitting(false);
   };
 
@@ -54,8 +48,8 @@ function CreatePostForm({ user, onPostSuccess }: { user: User, onPostSuccess: ()
       e.target.style.height = `${e.target.scrollHeight}px`;
   }
 
-  const avatarUrl = user.user_metadata.avatar_url;
-  const username = user.user_metadata.username ?? 'U';
+  const avatarUrl = user.avatar_url;
+  const username = user.username ?? 'U';
   const fallback = username.charAt(0).toUpperCase();
 
   return (
@@ -93,7 +87,7 @@ function CreatePostForm({ user, onPostSuccess }: { user: User, onPostSuccess: ()
   );
 }
 
-export function CreatePostDialog({ user, children }: { user: User, children: ReactNode }) {
+export function CreatePostDialog({ user, children }: { user: MockUser, children: ReactNode }) {
     const [open, setOpen] = useState(false);
     return (
         <Dialog open={open} onOpenChange={setOpen}>
@@ -111,28 +105,25 @@ export function CreatePostDialog({ user, children }: { user: User, children: Rea
 }
 
 // This is the inline version for the main feed
-export default function CreatePost({ user }: { user: User }) {
+export default function CreatePost({ user }: { user: MockUser }) {
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const supabase = createClient();
   const router = useRouter();
 
   const handlePost = async () => {
     if (content.trim().length === 0) return;
 
     setIsSubmitting(true);
-    const { error } = await supabase
-      .from('posts')
-      .insert({ content: content, user_id: user.id });
+    // This is where you would call your API to create a post.
+    // We'll simulate it with a timeout.
+    await new Promise(resolve => setTimeout(resolve, 500));
+    console.log('New Post:', { content, userId: user.id });
 
-    if (!error) {
-      setContent('');
-      if (textareaRef.current) textareaRef.current.style.height = 'auto';
-      router.refresh();
-    } else {
-      console.error(error);
-    }
+    setContent('');
+    if (textareaRef.current) textareaRef.current.style.height = 'auto';
+    router.refresh();
+    
     setIsSubmitting(false);
   };
 
@@ -142,8 +133,8 @@ export default function CreatePost({ user }: { user: User }) {
     e.target.style.height = `${e.target.scrollHeight}px`;
   };
 
-  const avatarUrl = user.user_metadata.avatar_url;
-  const username = user.user_metadata.username ?? 'U';
+  const avatarUrl = user.avatar_url;
+  const username = user.username ?? 'U';
   const fallback = username.charAt(0).toUpperCase();
 
   return (

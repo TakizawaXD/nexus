@@ -1,8 +1,6 @@
 'use client';
 
-import { createClient } from '@/lib/supabase/client';
-import type { PostWithAuthor } from '@/lib/types';
-import type { User } from '@supabase/supabase-js';
+import type { PostWithAuthor, MockUser } from '@/lib/types';
 import { useEffect, useState } from 'react';
 import PostCard from './PostCard';
 import { Skeleton } from '../ui/skeleton';
@@ -12,44 +10,16 @@ export default function Feed({
   user
 }: {
   serverPosts: PostWithAuthor[];
-  user: User | null;
+  user: MockUser | null;
 }) {
   const [posts, setPosts] = useState(serverPosts);
-  const supabase = createClient();
 
   useEffect(() => {
     setPosts(serverPosts);
   }, [serverPosts]);
 
-  useEffect(() => {
-    const channel = supabase
-      .channel('realtime posts')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'posts' },
-        async (payload) => {
-            const { data: newPosts } = await supabase
-                .from('posts')
-                .select('*, author:profiles(*), likes(user_id)')
-                .order('created_at', { ascending: false });
-
-            const formattedPosts: PostWithAuthor[] =
-                newPosts?.map((post) => ({
-                ...post,
-                author: Array.isArray(post.author) ? post.author[0] : post.author,
-                user_has_liked_post: !!user && post.likes.some(
-                    (like) => like.user_id === user?.id
-                ),
-            })) ?? [];
-            setPosts(formattedPosts);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [supabase, user]);
+  // Real-time functionality would be connected here via WebSockets or polling.
+  // For now, it just loads the server-rendered posts.
 
   if (!posts) {
     return (

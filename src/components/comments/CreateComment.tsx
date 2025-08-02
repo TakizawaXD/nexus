@@ -4,12 +4,12 @@ import { addComment } from '@/lib/actions/post.actions';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Button } from '../ui/button';
 import { Textarea } from '../ui/textarea';
-import type { User } from '@supabase/supabase-js';
+import type { MockUser } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
 import { useRef, useTransition } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
-export default function CreateComment({ user, postId }: { user: User; postId: string }) {
+export default function CreateComment({ user, postId }: { user: MockUser; postId: string }) {
   const [isPending, startTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -41,14 +41,14 @@ export default function CreateComment({ user, postId }: { user: User; postId: st
     e.target.style.height = `${e.target.scrollHeight}px`;
   };
 
-  const avatarUrl = user.user_metadata.avatar_url;
-  const username = user.user_metadata.username ?? 'U';
+  const avatarUrl = user?.avatar_url;
+  const username = user?.username ?? 'U';
   const fallback = username.charAt(0).toUpperCase();
 
   return (
     <form action={handleAction} ref={formRef} className="flex gap-4 p-4">
       <Avatar>
-        <AvatarImage src={avatarUrl} alt={username} />
+        <AvatarImage src={avatarUrl ?? undefined} alt={username} />
         <AvatarFallback>{fallback}</AvatarFallback>
       </Avatar>
       <div className="flex w-full flex-col">
