@@ -59,12 +59,13 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Rutas públicas que no requieren autenticación
-  const publicRoutes = ['/login', '/register', '/auth/callback'];
+  // const publicRoutes = ['/login', '/register', '/auth/callback'];
 
-  if (!user && !publicRoutes.includes(pathname)) {
-    // Si el usuario no está autenticado y la ruta no es pública, redirigir a login
-    return NextResponse.redirect(new URL('/login', request.url));
-  }
+  // Se comenta la redirección para permitir el acceso público
+  // if (!user && !publicRoutes.includes(pathname)) {
+  //   // Si el usuario no está autenticado y la ruta no es pública, redirigir a login
+  //   return NextResponse.redirect(new URL('/login', request.url));
+  // }
   
   if (user && (pathname === '/login' || pathname === '/register')) {
     // Si el usuario está autenticado y trata de acceder a login/register, redirigir a la home
