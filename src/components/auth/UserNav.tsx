@@ -15,6 +15,7 @@ import type { Profile } from '@/lib/types';
 import type { User } from '@supabase/supabase-js';
 import { LogOut, User as UserIcon, ChevronsUpDown, Settings } from 'lucide-react';
 import Link from 'next/link';
+import { logout } from '@/lib/actions/auth.actions';
 
 export default function UserNav({
   user,
@@ -28,6 +29,10 @@ export default function UserNav({
   const avatarUrl = profile?.avatar_url;
   const fullName = profile?.full_name;
   const fallback = username.charAt(0).toUpperCase();
+
+  const handleLogout = async () => {
+    await logout();
+  }
 
   return (
     <DropdownMenu>
@@ -76,10 +81,14 @@ export default function UserNav({
           </Link>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => alert('Cerrar sesión no implementado')}>
-          <LogOut className="mr-2 h-4 w-4" />
-          <span>Cerrar sesión</span>
-        </DropdownMenuItem>
+        <form action={handleLogout}>
+          <button type="submit" className="w-full">
+            <DropdownMenuItem>
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Cerrar sesión</span>
+            </DropdownMenuItem>
+          </button>
+        </form>
       </DropdownMenuContent>
     </DropdownMenu>
   );
