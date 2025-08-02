@@ -4,6 +4,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
 import { ThemeProvider } from '@/components/theme/ThemeProvider';
 import Sidebar from '@/components/layout/Sidebar';
+import RightSidebar from '@/components/layout/RightSidebar';
 
 export const metadata: Metadata = {
   title: {
@@ -30,16 +31,17 @@ export default function RootLayout({
         )}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
+          defaultTheme="dark"
           enableSystem
           disableTransitionOnChange
         >
-          <div className="flex min-h-screen w-full">
+          <div className="flex min-h-screen w-full justify-center">
             <Sidebar />
-            <main className="flex flex-1 justify-center">
-              <div className="w-full max-w-2xl flex-col border-x border-border">
+            <main className="flex flex-1">
+              <div className="flex-1 max-w-2xl border-x border-border">
                 {children}
               </div>
+              <RightSidebar />
             </main>
           </div>
           <Toaster />

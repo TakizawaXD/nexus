@@ -68,12 +68,11 @@ function CreatePostForm({ profile, onSuccess }: CreatePostFormProps) {
             />
         </div>
         <DialogFooter className="p-4 border-t">
-            {/* <span className="text-sm text-muted-foreground mr-auto">{280 - content.length} caracteres restantes</span> */}
-            <Button type="submit" disabled={isPending}>
+            <Button type="submit" disabled={isPending} className="rounded-full">
                 {isPending ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
-                    <Send className="mr-2 h-4 w-4" />
+                    null
                 )}
                 Publicar
             </Button>
@@ -156,14 +155,13 @@ export default function CreatePost({ profile }: { profile: Profile }) {
           ref={textareaRef}
           name="content"
           onChange={handleInput}
-          placeholder="¿Qué está pasando?"
+          placeholder="¿Qué novedades tienes?"
           maxLength={280}
           className="w-full resize-none border-none bg-transparent p-0 text-lg focus-visible:ring-0"
           rows={1}
         />
-        <div className="mt-2 flex items-center justify-end">
-          {/* <span className="mr-4 text-sm text-muted-foreground">{280 - content.length}</span> */}
-          <Button type="submit" disabled={isPending} size="sm">
+        <div className="mt-4 flex items-center justify-end">
+          <Button type="submit" disabled={isPending} size="sm" className="rounded-full">
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Publicar
           </Button>

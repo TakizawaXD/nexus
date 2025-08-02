@@ -1,4 +1,4 @@
-import { Home, User, PenSquare, Settings } from 'lucide-react';
+import { Home, User, Bell, Search, PenSquare } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '../ui/button';
 import { NexoLogo } from '../shared/NexoLogo';
@@ -13,15 +13,15 @@ export default function Sidebar() {
   const navItems =
       [
           { href: '/', icon: Home, label: 'Inicio' },
+          { href: '#', icon: Search, label: 'Explorar' },
+          { href: '#', icon: Bell, label: 'Notificaciones' },
           { href: `/u/${profile.username}`, icon: User, label: 'Perfil' },
-          { href: '/settings/profile', icon: Settings, label: 'Configuración' },
       ];
 
   return (
     <aside className="sticky top-0 hidden h-screen w-20 flex-col items-center border-r border-border p-4 sm:flex lg:w-64 lg:items-start">
-      <Link href="/" className="mb-8 flex items-center gap-2 self-start">
+      <Link href="/" className="mb-4 flex items-center gap-2 self-start px-2">
         <NexoLogo className="h-8 w-8 text-primary" />
-        <span className="hidden text-xl font-bold lg:inline">Nexo</span>
       </Link>
 
       <nav className="flex flex-1 flex-col gap-2">
@@ -29,23 +29,23 @@ export default function Sidebar() {
           <Link key={item.label} href={item.href}>
             <Button
               variant="ghost"
-              className="w-full justify-start gap-3 p-3 text-lg"
+              className="w-full justify-start gap-3 rounded-full p-3 text-xl"
             >
-              <item.icon className="h-6 w-6" />
+              <item.icon className="h-7 w-7" />
               <span className="hidden lg:inline">{item.label}</span>
             </Button>
           </Link>
         ))}
+        <CreatePostDialog profile={profile}>
+            <Button className="w-full justify-center gap-3 rounded-full p-3 text-lg lg:w-auto lg:px-10">
+              <PenSquare className="h-7 w-7 lg:hidden" />
+              <span className="hidden text-lg font-bold lg:inline">Publicar</span>
+            </Button>
+        </CreatePostDialog>
       </nav>
 
       <div className="mt-auto flex w-full flex-col gap-2">
         <ThemeSwitcher />
-        <CreatePostDialog profile={profile}>
-            <Button className="w-full justify-center gap-3 p-3 text-lg lg:justify-start">
-            <PenSquare className="h-6 w-6" />
-            <span className="hidden lg:inline">Publicar</span>
-            </Button>
-        </CreatePostDialog>
       </div>
     </aside>
   );

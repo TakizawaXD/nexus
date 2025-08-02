@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import type { PostWithAuthor, User } from '@/lib/types';
 import { formatDistanceToNowStrict } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { MessageCircle, Heart } from 'lucide-react';
+import { MessageCircle, Heart, Repeat, Send } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useTransition } from 'react';
 import { cn } from '@/lib/utils';
@@ -58,7 +58,7 @@ export default function PostCard({ post, user }: { post: PostWithAuthor, user: U
 
   return (
     <article 
-        className="flex gap-4 border-b p-4 transition-colors hover:bg-muted/50"
+        className="flex gap-4 border-b p-4 transition-colors hover:bg-muted/10"
         aria-labelledby={`post-author-${post.id}`}
     >
         <Link href={`/u/${post.author.username}`} className="flex-shrink-0">
@@ -68,20 +68,22 @@ export default function PostCard({ post, user }: { post: PostWithAuthor, user: U
             </Avatar>
         </Link>
         <div className="flex w-full flex-col">
-            <div className="flex flex-wrap items-center gap-x-2">
-                <Link href={`/u/${post.author.username}`} className="font-bold hover:underline" id={`post-author-${post.id}`}>
-                    {post.author.full_name ?? post.author.username}
-                </Link>
-                <span className="text-sm text-muted-foreground">@{post.author.username}</span>
-                <span className="text-sm text-muted-foreground hidden sm:inline">·</span>
-                <Link href={`/post/${post.id}`} className="text-sm text-muted-foreground hover:underline">
-                    <time dateTime={postDate.toISOString()} title={postDate.toLocaleString()}>
-                        {formatDistanceToNowStrict(postDate, {
-                            addSuffix: true,
-                            locale: es,
-                        })}
-                    </time>
-                </Link>
+            <div className="flex flex-wrap items-center justify-between gap-x-2">
+                <div className="flex items-center gap-2">
+                    <Link href={`/u/${post.author.username}`} className="font-bold hover:underline" id={`post-author-${post.id}`}>
+                        {post.author.full_name ?? post.author.username}
+                    </Link>
+                    <span className="text-sm text-muted-foreground">@{post.author.username}</span>
+                    <span className="text-sm text-muted-foreground hidden sm:inline">·</span>
+                    <Link href={`/post/${post.id}`} className="text-sm text-muted-foreground hover:underline">
+                        <time dateTime={postDate.toISOString()} title={postDate.toLocaleString()}>
+                            {formatDistanceToNowStrict(postDate, {
+                                addSuffix: true,
+                                locale: es,
+                            })}
+                        </time>
+                    </Link>
+                </div>
                 <div className="ml-auto">
                     {user?.id === post.author.id && <PostActions post={post} />}
                 </div>
@@ -91,25 +93,32 @@ export default function PostCard({ post, user }: { post: PostWithAuthor, user: U
                 <p className="mt-1 whitespace-pre-wrap text-base">{post.content}</p>
                 {post.image_url && (
                     <div className="mt-2">
-                        <img src={post.image_url} alt="Post image" className="rounded-lg border object-cover max-h-96" data-ai-hint="social media" />
+                        <img src={post.image_url} alt="Post image" className="rounded-lg border object-cover max-h-[500px] w-full" data-ai-hint="social media" />
                     </div>
                 )}
             </Link>
 
-            <div className="mt-4 flex items-center gap-4">
+            <div className="mt-4 flex items-center justify-between max-w-xs">
                 <Button variant="ghost" size="sm" className="flex items-center gap-2 text-muted-foreground hover:text-primary" onClick={() => router.push(`/post/${post.id}`)}>
                     <MessageCircle className="h-5 w-5" />
                     <span>{post.comments_count}</span>
+                </Button>
+                <Button variant="ghost" size="sm" className="flex items-center gap-2 text-muted-foreground hover:text-green-500">
+                    <Repeat className="h-5 w-5" />
+                    <span>0</span>
                 </Button>
                 <Button 
                     variant="ghost" 
                     size="sm" 
                     onClick={handleLike} 
                     disabled={isLikePending}
-                    className={cn("flex items-center gap-2", optimisticHasLiked ? "text-primary" : "text-muted-foreground hover:text-primary")}
+                    className={cn("flex items-center gap-2", optimisticHasLiked ? "text-pink-500" : "text-muted-foreground hover:text-pink-500")}
                 >
                     <Heart className={cn("h-5 w-5", optimisticHasLiked && "fill-current")} />
                     <span>{optimisticLikes}</span>
+                </Button>
+                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary">
+                    <Send className="h-5 w-5" />
                 </Button>
             </div>
         </div>
