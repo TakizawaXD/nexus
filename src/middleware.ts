@@ -59,15 +59,22 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const protectedRoutes = ['/settings'];
+  const publicRoutes = ['/login', '/register', '/auth/callback', '/'];
 
-  if (!session && protectedRoutes.some(route => pathname.startsWith(route))) {
-    return NextResponse.redirect(new URL('/login', request.url));
+  // Si no hay sesión y la ruta no es una de las públicas principales, protegerla.
+  // Permite el acceso a perfiles de usuario y posts individuales.
+  if (!session && !publicRoutes.some(route => pathname === route) && !pathname.startsWith('/u/') && !pathname.startsWith('/post/')) {
+     if (protectedRoutes.some(route => pathname.startsWith(route))) {
+        return NextResponse.redirect(new URL('/login', request.url));
+     }
   }
   
+  // Si el usuario tiene sesión y trata de acceder a login/register, redirigir a la home.
   if (session && (pathname === '/login' || pathname === '/register')) {
     return NextResponse.redirect(new URL('/', request.url));
   }
 
+  // Permite el acceso a todas las demás rutas
   return response;
 }
 

@@ -39,13 +39,9 @@ export default async function RootLayout({
           disableTransitionOnChange
         >
           <div className="flex min-h-screen w-full justify-center">
-            <Sidebar profile={profile} />
-            <main className="flex flex-1">
-              <div className="flex-1 max-w-2xl border-x border-border">
-                {children}
-              </div>
-              <RightSidebar />
-            </main>
+             <div className="flex w-full justify-center">
+              {children}
+            </div>
           </div>
           <Toaster />
         </ThemeProvider>

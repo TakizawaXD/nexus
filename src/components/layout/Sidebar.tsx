@@ -14,7 +14,7 @@ export default async function Sidebar() {
     ? [
         { href: '/', icon: Home, label: 'Inicio' },
         { href: '#', icon: Search, label: 'Explorar' },
-        { href: '#', icon: Bell, label: 'Notificaciones' },
+        { href: '#', label: 'Notificaciones', icon: Bell, disabled: true },
         { href: `/u/${profile.username}`, icon: User, label: 'Perfil' },
       ]
     : [
@@ -33,10 +33,12 @@ export default async function Sidebar() {
 
       <nav className="flex flex-1 flex-col gap-2">
         {navItems.map((item) => (
-          <Link key={item.label} href={item.href}>
+           <Link key={item.label} href={item.href} passHref>
             <Button
               variant="ghost"
               className="w-full justify-start gap-3 rounded-full p-3 text-xl"
+              disabled={(item as any).disabled}
+              aria-disabled={(item as any).disabled}
             >
               <item.icon className="h-7 w-7" />
               <span className="hidden lg:inline">{item.label}</span>
