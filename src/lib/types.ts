@@ -9,6 +9,7 @@ export type Profile = {
   avatar_url: string | null;
   followers_count?: number;
   following_count?: number;
+  bio?: string | null;
 };
 
 export type PostWithAuthor = {

@@ -11,31 +11,32 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import type { Profile, MockUser } from '@/lib/types';
-import { LogOut, User as UserIcon, ChevronsUpDown } from 'lucide-react';
+import type { Profile, User } from '@/lib/types';
+import { LogOut, User as UserIcon, ChevronsUpDown, Settings } from 'lucide-react';
 import Link from 'next/link';
+import { createBrowserClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 
 export default function UserNav({
   user,
   profile,
 }: {
-  user: MockUser;
-  profile: Pick<Profile, 'username'> | null;
+  user: User;
+  profile: Pick<Profile, 'username' | 'avatar_url' | 'full_name'> | null;
 }) {
   const router = useRouter();
 
   const handleSignOut = async () => {
-    // In a real app, this would sign the user out.
-    // Here, we just refresh the page to a logged-out state.
+    const supabase = createBrowserClient();
+    await supabase.auth.signOut();
     router.push('/login');
     router.refresh();
   };
 
   const username = profile?.username ?? 'user';
   const email = user.email ?? 'no-email';
-  const avatarUrl = user.avatar_url;
-  const fullName = user.full_name;
+  const avatarUrl = profile?.avatar_url;
+  const fullName = profile?.full_name;
   const fallback = username.charAt(0).toUpperCase();
 
   return (
@@ -46,7 +47,7 @@ export default function UserNav({
           className="relative h-auto w-full justify-start gap-3 rounded-full p-2 text-base"
         >
           <Avatar className="h-9 w-9">
-            <AvatarImage src={avatarUrl} alt={username} />
+            <AvatarImage src={avatarUrl ?? undefined} alt={username} />
             <AvatarFallback>{fallback}</AvatarFallback>
           </Avatar>
           <div className="hidden flex-1 flex-col items-start text-left lg:flex">
@@ -71,6 +72,12 @@ export default function UserNav({
             <DropdownMenuItem>
               <UserIcon className="mr-2 h-4 w-4" />
               <span>Perfil</span>
+            </DropdownMenuItem>
+          </Link>
+          <Link href="/settings/profile">
+            <DropdownMenuItem>
+              <Settings className="mr-2 h-4 w-4" />
+              <span>Configuración</span>
             </DropdownMenuItem>
           </Link>
         </DropdownMenuGroup>
