@@ -32,7 +32,7 @@ export default async function ProfilePage({
   const isFollowing = profile.username !== 'neo'; // Mock logic
 
   return (
-    <div>
+    <>
         <div className="h-48 bg-muted relative" data-ai-hint="abstract background">
             {profile.banner_url ? (
                 <img 
@@ -83,6 +83,6 @@ export default async function ProfilePage({
                 </div>
             )}
         </div>
-    </div>
+    </>
   );
 }

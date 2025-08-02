@@ -20,7 +20,7 @@ export default async function PostPage({ params }: { params: { id: string }}) {
     const comments = MOCK_COMMENTS.filter(c => c.post_id === params.id);
 
     return (
-        <div className="w-full">
+        <>
             <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-md">
                 <Link href="/" passHref>
                     <Button variant="ghost" size="icon">
@@ -49,6 +49,6 @@ export default async function PostPage({ params }: { params: { id: string }}) {
                     </div>
                 )}
             </div>
-        </div>
+        </>
     );
 }

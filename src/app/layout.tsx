@@ -3,6 +3,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
 import { ThemeProvider } from '@/components/theme/ThemeProvider';
+import Sidebar from '@/components/layout/Sidebar';
 
 export const metadata: Metadata = {
   title: {
@@ -33,7 +34,14 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <div className="flex min-h-screen w-full">
+            <Sidebar />
+            <main className="flex flex-1 justify-center">
+              <div className="w-full max-w-2xl flex-col border-x border-border">
+                {children}
+              </div>
+            </main>
+          </div>
           <Toaster />
         </ThemeProvider>
       </body>
