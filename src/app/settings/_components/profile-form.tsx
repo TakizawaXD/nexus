@@ -1,6 +1,6 @@
 'use client'
 
-import { useFormState } from 'react-dom'
+import { useActionState } from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { useToast } from '@/hooks/use-toast'
 import type { Profile } from '@/lib/types'
@@ -17,7 +17,7 @@ import { SubmitButton } from './submit-button'
 export function ProfileForm({ profile }: { profile: Profile }) {
     const { toast } = useToast()
     const [initialState, setInitialState] = useState({ success: false, message: '', errors: null });
-    const [state, formAction] = useFormState(updateProfile, initialState);
+    const [state, formAction] = useActionState(updateProfile, initialState);
     
     const [avatarPreview, setAvatarPreview] = useState<string | null>(profile.avatar_url);
     const avatarFileInputRef = useRef<HTMLInputElement>(null);

@@ -1,6 +1,6 @@
 'use client';
 
-import { useFormState, useFormStatus } from 'react-dom';
+import { useActionState, useFormStatus } from 'react-dom';
 import { login, signup, signInWithGoogle } from '@/lib/actions/auth.actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,7 +37,7 @@ function GoogleButton() {
 export default function AuthForm({ mode }: { mode: 'login' | 'register' }) {
   const { toast } = useToast();
   const action = mode === 'login' ? login : signup;
-  const [state, formAction] = useFormState(action, { message: '', errors: null });
+  const [state, formAction] = useActionState(action, { message: '', errors: null });
 
   useEffect(() => {
     if (state.message && !state.errors) {
