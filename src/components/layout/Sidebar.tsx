@@ -1,4 +1,4 @@
-import { Home, User, PenSquare } from 'lucide-react';
+import { Home, User, PenSquare, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '../ui/button';
 import { NexoLogo } from '../shared/NexoLogo';
@@ -14,6 +14,7 @@ export default function Sidebar() {
       [
           { href: '/', icon: Home, label: 'Inicio' },
           { href: `/u/${profile.username}`, icon: User, label: 'Perfil' },
+          { href: '/settings/profile', icon: Settings, label: 'Configuración' },
       ];
 
   return (
