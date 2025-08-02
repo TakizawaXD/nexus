@@ -5,23 +5,23 @@ import { revalidatePath } from 'next/cache';
 export async function addComment(postId: string, formData: FormData) {
     const content = formData.get('content') as string;
     if (!content.trim()) {
-        return { success: false, error: 'Comment cannot be empty.' };
+        return { success: false, error: 'El comentario no puede estar vacío.' };
     }
     
-    // Here you would typically call your backend API to save the comment.
-    console.log('Adding comment:', { postId, content: content.trim() });
+    // Aquí normalmente llamarías a tu API de backend para guardar el comentario.
+    console.log('Agregando comentario:', { postId, content: content.trim() });
     
-    // We'll simulate a success response.
+    // Simularemos una respuesta exitosa.
     revalidatePath(`/post/${postId}`);
-    revalidatePath('/'); // To update comment count on feed
+    revalidatePath('/'); // Para actualizar el recuento de comentarios en el feed
     return { success: true };
 }
 
 export async function deletePost(postId: string) {
-    // Here you would typically call your backend API to delete the post.
-    console.log('Deleting post:', postId);
+    // Aquí normalmente llamarías a tu API de backend para eliminar la publicación.
+    console.log('Eliminando publicación:', postId);
 
-    // We'll simulate a success response.
+    // Simularemos una respuesta exitosa.
     revalidatePath('/');
     return { success: true };
 }

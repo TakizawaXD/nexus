@@ -31,7 +31,7 @@ export default function AuthForm({ message }: { message?: string }) {
     // Mock authentication
     setTimeout(() => {
         if (isSignUp) {
-            setSuccessMessage('Account created successfully! You can now sign in.');
+            setSuccessMessage('¡Cuenta creada con éxito! Ahora puedes iniciar sesión.');
             setIsSignUp(false);
         } else {
             // Simulate successful login and redirect
@@ -55,12 +55,12 @@ export default function AuthForm({ message }: { message?: string }) {
       <CardHeader className="items-center text-center">
         <NexoLogo className="h-12 w-12 text-primary mb-2" />
         <CardTitle className="text-2xl font-bold">
-          {isSignUp ? 'Create an account' : 'Welcome to Nexo'}
+          {isSignUp ? 'Crear una cuenta' : 'Bienvenido a Nexo'}
         </CardTitle>
         <CardDescription>
           {isSignUp
-            ? 'Enter your details to create your account.'
-            : 'Sign in to continue.'}
+            ? 'Ingresa tus datos para crear tu cuenta.'
+            : 'Inicia sesión para continuar.'}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -73,10 +73,10 @@ export default function AuthForm({ message }: { message?: string }) {
         >
           {isSignUp && (
             <div className="grid gap-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="username">Usuario</Label>
               <div className="relative">
                 <User className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input id="username" name="username" placeholder="your_username" required className="pl-8" />
+                <Input id="username" name="username" placeholder="tu_usuario" required className="pl-8" />
               </div>
             </div>
           )}
@@ -84,11 +84,11 @@ export default function AuthForm({ message }: { message?: string }) {
             <Label htmlFor="email">Email</Label>
             <div className="relative">
               <AtSign className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input id="email" name="email" type="email" placeholder="m@example.com" required className="pl-8" />
+              <Input id="email" name="email" type="email" placeholder="m@ejemplo.com" required className="pl-8" />
             </div>
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">Contraseña</Label>
             <div className="relative">
               <KeyRound className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input id="password" name="password" type="password" required className="pl-8" placeholder="••••••••" minLength={6} />
@@ -96,14 +96,14 @@ export default function AuthForm({ message }: { message?: string }) {
           </div>
           <Button type="submit" className="w-full" disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isSignUp ? 'Sign Up' : 'Sign In'}
+            {isSignUp ? 'Registrarse' : 'Iniciar Sesión'}
           </Button>
           <div className="relative my-2">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+              <span className="bg-background px-2 text-muted-foreground">O continuar con</span>
             </div>
           </div>
           <Button variant="outline" type="button" onClick={handleGoogleSignIn} disabled={isSubmitting}>
@@ -117,9 +117,9 @@ export default function AuthForm({ message }: { message?: string }) {
           </Button>
         </form>
         <div className="mt-4 text-center text-sm">
-          {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
+          {isSignUp ? '¿Ya tienes una cuenta?' : '¿No tienes una cuenta?'}{' '}
           <button onClick={() => setIsSignUp(!isSignUp)} className="font-semibold text-primary hover:underline" disabled={isSubmitting}>
-            {isSignUp ? 'Sign In' : 'Sign Up'}
+            {isSignUp ? 'Iniciar Sesión' : 'Registrarse'}
           </button>
         </div>
       </CardContent>

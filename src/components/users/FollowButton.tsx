@@ -21,7 +21,7 @@ export default function FollowButton({ profileId, isFollowing }: { profileId: st
         toast({
             variant: "destructive",
             title: "Error",
-            description: result.error || "Could not update follow status.",
+            description: result.error || "No se pudo actualizar el estado de seguimiento.",
         });
       }
     });
@@ -37,9 +37,9 @@ export default function FollowButton({ profileId, isFollowing }: { profileId: st
       {isPending ? (
         <Loader2 className="animate-spin" />
       ) : isFollowingOptimistic ? (
-        'Following'
+        'Siguiendo'
       ) : (
-        'Follow'
+        'Seguir'
       )}
     </Button>
   );

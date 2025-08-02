@@ -9,7 +9,7 @@ import { MOCK_USER, MOCK_PROFILES, MOCK_POSTS } from '@/lib/mock-data';
 
 export async function generateMetadata({ params }: { params: { username: string } }) {
     return {
-        title: `${params.username}'s Profile`,
+        title: `Perfil de ${params.username}`,
     };
 }
 
@@ -51,11 +51,11 @@ export default async function ProfilePage({
                 <p className="text-muted-foreground">@{profile.username}</p>
             </div>
             
-            <p className="mt-4">A visionary creator shaping the future of digital art. Follow for a journey into imagination and innovation.</p>
+            <p className="mt-4">Un creador visionario que da forma al futuro del arte digital. Sígueme para un viaje a la imaginación y la innovación.</p>
 
             <div className="mt-4 flex gap-4 text-sm text-muted-foreground">
-                <p><span className="font-bold text-foreground">{profile.following_count}</span> Following</p>
-                <p><span className="font-bold text-foreground">{profile.followers_count}</span> Followers</p>
+                <p><span className="font-bold text-foreground">{profile.following_count}</span> Siguiendo</p>
+                <p><span className="font-bold text-foreground">{profile.followers_count}</span> Seguidores</p>
             </div>
         </div>
         
@@ -68,7 +68,7 @@ export default async function ProfilePage({
                 ))
             ) : (
                 <div className="p-8 text-center text-muted-foreground">
-                    <p>This user hasn't posted anything yet.</p>
+                    <p>Este usuario aún no ha publicado nada.</p>
                 </div>
             )}
         </div>

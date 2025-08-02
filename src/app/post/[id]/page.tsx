@@ -15,11 +15,11 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
     const post = MOCK_POSTS.find(p => p.id === params.id);
 
     if (!post || !post.author) {
-        return { title: 'Post not found' };
+        return { title: 'Publicación no encontrada' };
     }
     
     return {
-        title: `Post by @${post.author.username}: "${post.content.substring(0, 50)}..."`,
+        title: `Publicación de @${post.author.username}: "${post.content.substring(0, 50)}..."`,
     };
 }
 
@@ -46,7 +46,7 @@ export default async function PostPage({ params }: { params: { id: string } }) {
                         <ArrowLeft className="h-5 w-5" />
                     </Button>
                 </Link>
-                <h1 className="text-xl font-bold">Post</h1>
+                <h1 className="text-xl font-bold">Publicación</h1>
             </header>
 
             <PostCard post={post} user={user} />
@@ -65,7 +65,7 @@ export default async function PostPage({ params }: { params: { id: string } }) {
                 ) : (
                     !user && (
                         <div className="p-8 text-center text-muted-foreground">
-                            <p>No comments yet. Sign in to leave a reply!</p>
+                            <p>Aún no hay comentarios. ¡Inicia sesión para dejar una respuesta!</p>
                         </div>
                     )
                 )}

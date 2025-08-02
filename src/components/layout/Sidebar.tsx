@@ -7,17 +7,15 @@ import { CreatePostDialog } from '../posts/CreatePost';
 import { MOCK_USER } from '@/lib/mock-data';
 
 export default async function Sidebar() {
-  // We'll use a mock user object. In a real app, you'd get this from your auth provider.
-  // Set to null to test the logged-out state.
   const user = MOCK_USER; 
   const profile = user ? { username: user.username } : null;
 
   const navItems = [
-    { href: '/', icon: Home, label: 'Home', auth: false },
+    { href: '/', icon: Home, label: 'Inicio', auth: false },
     {
       href: `/u/${profile?.username}`,
       icon: User,
-      label: 'Profile',
+      label: 'Perfil',
       auth: true,
     },
   ];
@@ -52,7 +50,7 @@ export default async function Sidebar() {
             <CreatePostDialog user={user}>
               <Button className="w-full justify-center gap-3 p-3 text-base lg:justify-start">
                 <PenSquare className="h-6 w-6" />
-                <span className="hidden lg:inline">Post</span>
+                <span className="hidden lg:inline">Publicar</span>
               </Button>
             </CreatePostDialog>
 
@@ -65,7 +63,7 @@ export default async function Sidebar() {
               className="w-full justify-start gap-3 p-3 text-lg"
             >
               <LogIn className="h-6 w-6" />
-              <span className="hidden lg:inline">Login</span>
+              <span className="hidden lg:inline">Iniciar Sesión</span>
             </Button>
           </Link>
         )}

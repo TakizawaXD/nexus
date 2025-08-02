@@ -30,7 +30,7 @@ export default function CreateComment({ user, postId }: { user: MockUser; postId
             toast({
                 variant: 'destructive',
                 title: 'Error',
-                description: result.error || 'Could not post reply.'
+                description: result.error || 'No se pudo publicar la respuesta.'
             })
         }
     });
@@ -56,7 +56,7 @@ export default function CreateComment({ user, postId }: { user: MockUser; postId
           ref={textareaRef}
           name="content"
           onInput={handleInput}
-          placeholder="Post your reply"
+          placeholder="Publica tu respuesta"
           className="w-full resize-none border-none bg-transparent p-0 text-lg focus-visible:ring-0"
           rows={1}
           required
@@ -64,7 +64,7 @@ export default function CreateComment({ user, postId }: { user: MockUser; postId
         <div className="mt-2 flex items-center justify-end">
           <Button type="submit" disabled={isPending} size="sm">
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Reply
+            Responder
           </Button>
         </div>
       </div>

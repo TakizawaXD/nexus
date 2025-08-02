@@ -1,7 +1,7 @@
 import AuthForm from '@/components/auth/AuthForm';
 
 export const metadata = {
-  title: 'Login',
+  title: 'Iniciar Sesión',
 };
 
 export default async function LoginPage({

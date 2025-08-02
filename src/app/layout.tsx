@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     default: 'Nexo',
     template: '%s | Nexo',
   },
-  description: 'A minimalist social network built with Next.js and Supabase.',
+  description: 'Una red social minimalista construida con Next.js.',
 };
 
 export default function RootLayout({
@@ -18,7 +18,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="es" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -34,7 +34,7 @@ export default function RootLayout({
               {children}
             </main>
             <div className="hidden lg:block w-80">
-              {/* Right sidebar content can go here */}
+              {/* El contenido de la barra lateral derecha puede ir aquí */}
             </div>
           </div>
         </div>

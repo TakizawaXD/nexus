@@ -13,7 +13,7 @@ export default async function Home() {
   return (
     <div className="w-full">
       <header className="sticky top-0 z-10 flex h-14 items-center border-b bg-background/80 px-4 backdrop-blur-md">
-        <h1 className="text-xl font-bold">Home</h1>
+        <h1 className="text-xl font-bold">Inicio</h1>
       </header>
       
       {user && <CreatePost user={user} />}

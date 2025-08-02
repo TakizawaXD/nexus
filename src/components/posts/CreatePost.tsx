@@ -27,18 +27,16 @@ function CreatePostForm({ user, onPostSuccess }: { user: MockUser, onPostSuccess
     if (content.trim().length === 0) return;
 
     setIsSubmitting(true);
-    // This is where you would call your API to create a post.
-    // We'll simulate it with a timeout.
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    console.log('New Post:', { content, userId: user.id });
+    console.log('Nueva Publicación:', { content, userId: user.id });
 
     setContent('');
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
     }
     onPostSuccess();
-    router.refresh(); // Refresh to see the new (mock) post
+    router.refresh();
     setIsSubmitting(false);
   };
 
@@ -63,16 +61,16 @@ function CreatePostForm({ user, onPostSuccess }: { user: MockUser, onPostSuccess
             ref={textareaRef}
             value={content}
             onChange={handleInput}
-            placeholder="What's happening?"
+            placeholder="¿Qué está pasando?"
             maxLength={280}
             className="w-full min-h-[80px] resize-none border-none bg-transparent p-0 text-lg focus-visible:ring-0"
             rows={2}
             />
         </div>
         <DialogFooter className="p-4 border-t">
-            <span className="text-sm text-muted-foreground mr-auto">{280 - content.length} characters left</span>
+            <span className="text-sm text-muted-foreground mr-auto">{280 - content.length} caracteres restantes</span>
             <DialogClose asChild>
-                <Button variant="ghost">Cancel</Button>
+                <Button variant="ghost">Cancelar</Button>
             </DialogClose>
             <Button onClick={handlePost} disabled={isSubmitting || content.trim().length === 0}>
                 {isSubmitting ? (
@@ -80,7 +78,7 @@ function CreatePostForm({ user, onPostSuccess }: { user: MockUser, onPostSuccess
                 ) : (
                     <Send className="mr-2 h-4 w-4" />
                 )}
-                Post
+                Publicar
             </Button>
         </DialogFooter>
     </div>
@@ -96,7 +94,7 @@ export function CreatePostDialog({ user, children }: { user: MockUser, children:
             </DialogTrigger>
             <DialogContent className="sm:max-w-xl p-0 gap-0">
                 <DialogHeader className="p-4 border-b">
-                    <DialogTitle>Create Post</DialogTitle>
+                    <DialogTitle>Crear Publicación</DialogTitle>
                 </DialogHeader>
                 <CreatePostForm user={user} onPostSuccess={() => setOpen(false)} />
             </DialogContent>
@@ -115,10 +113,8 @@ export default function CreatePost({ user }: { user: MockUser }) {
     if (content.trim().length === 0) return;
 
     setIsSubmitting(true);
-    // This is where you would call your API to create a post.
-    // We'll simulate it with a timeout.
     await new Promise(resolve => setTimeout(resolve, 500));
-    console.log('New Post:', { content, userId: user.id });
+    console.log('Nueva Publicación:', { content, userId: user.id });
 
     setContent('');
     if (textareaRef.current) textareaRef.current.style.height = 'auto';
@@ -148,7 +144,7 @@ export default function CreatePost({ user }: { user: MockUser }) {
           ref={textareaRef}
           value={content}
           onChange={handleInput}
-          placeholder="What's happening?"
+          placeholder="¿Qué está pasando?"
           maxLength={280}
           className="w-full resize-none border-none bg-transparent p-0 text-lg focus-visible:ring-0"
           rows={1}
@@ -157,7 +153,7 @@ export default function CreatePost({ user }: { user: MockUser }) {
           <span className="mr-4 text-sm text-muted-foreground">{280 - content.length}</span>
           <Button onClick={handlePost} disabled={isSubmitting || content.trim().length === 0} size="sm">
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Post
+            Publicar
           </Button>
         </div>
       </div>
