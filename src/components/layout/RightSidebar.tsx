@@ -1,10 +1,10 @@
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { MOCK_PROFILES } from '@/lib/mock-data';
 import Link from 'next/link';
 import { Search } from 'lucide-react';
 import { Input } from '../ui/input';
+import { getUsersToFollow } from '@/lib/actions/user.actions';
+import { createServerClient } from '@/lib/supabase/server';
+import SuggestedUser from '../users/SuggestedUser';
 
 const trends = [
   { category: 'Tendencia en tu país', topic: '#ReactJS', posts: '15.2k posts' },
@@ -13,8 +13,14 @@ const trends = [
   { category: 'Gaming', topic: 'The Witcher 4', posts: '3,112 posts' },
 ];
 
-export default function RightSidebar() {
-  const usersToFollow = MOCK_PROFILES.slice(1, 4);
+export default async function RightSidebar() {
+  const supabase = createServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  let usersToFollow = [];
+  if (user) {
+    usersToFollow = await getUsersToFollow();
+  }
 
   return (
     <aside className="sticky top-0 hidden h-screen w-80 flex-col gap-6 p-4 lg:flex">
@@ -38,30 +44,18 @@ export default function RightSidebar() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>A quién seguir</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {usersToFollow.map((profile) => (
-            <div key={profile.id} className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Avatar className="h-10 w-10">
-                  <AvatarImage src={profile.avatar_url ?? undefined} />
-                  <AvatarFallback>{profile.username.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <Link href={`/u/${profile.username}`} className="font-bold hover:underline">
-                    {profile.full_name ?? profile.username}
-                  </Link>
-                  <p className="text-sm text-muted-foreground">@{profile.username}</p>
-                </div>
-              </div>
-              <Button variant="secondary" size="sm" className="rounded-full">Seguir</Button>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
+      {user && usersToFollow.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>A quién seguir</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {usersToFollow.map((profile) => (
+              <SuggestedUser key={profile.id} profile={profile} />
+            ))}
+          </CardContent>
+        </Card>
+      )}
     </aside>
   );
 }

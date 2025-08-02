@@ -5,10 +5,16 @@ import { notFound } from 'next/navigation';
 import { User as UserIcon } from 'lucide-react';
 import FollowButton from '@/components/users/FollowButton';
 import { Separator } from '@/components/ui/separator';
-import { MOCK_PROFILES, MOCK_POSTS, MOCK_USER } from '@/lib/mock-data';
+import { getAuthProfile, getProfileWithPosts } from '@/lib/actions/user.actions';
 
 export async function generateMetadata({ params }: { params: { username: string } }) {
-    const profile = MOCK_PROFILES.find(p => p.username === params.username);
+    const { profile } = await getProfileWithPosts(params.username);
+
+    if (!profile) {
+        return {
+            title: 'Perfil no encontrado'
+        }
+    }
 
     return {
         title: profile?.full_name ? `${profile.full_name} (@${params.username})` : `@${params.username}`,
@@ -20,17 +26,14 @@ export default async function ProfilePage({
 }: {
   params: { username: string };
 }) {
-  const authUser = MOCK_USER;
+  const authUser = await getAuthProfile();
   
-  const profile = MOCK_PROFILES.find(p => p.username === params.username);
+  const { profile, posts, isFollowing, error } = await getProfileWithPosts(params.username);
 
-  if (!profile) {
+  if (!profile || error) {
     notFound();
   }
   
-  const userPosts: PostWithAuthor[] = MOCK_POSTS.filter(p => p.author.username === profile.username) ?? [];
-  const isFollowing = profile.username !== 'neo'; // Mock logic
-
   return (
     <>
         <div className="h-48 bg-muted relative" data-ai-hint="abstract background">
@@ -73,9 +76,9 @@ export default async function ProfilePage({
         <Separator />
         
         <div className="border-t border-border">
-            {userPosts.length > 0 ? (
-                userPosts.map((post) => (
-                    <PostCard key={post.id} post={post} user={authUser} />
+            {posts.length > 0 ? (
+                posts.map((post) => (
+                    <PostCard key={post.id} post={post as PostWithAuthor} user={authUser} />
                 ))
             ) : (
                 <div className="p-8 text-center text-muted-foreground">
