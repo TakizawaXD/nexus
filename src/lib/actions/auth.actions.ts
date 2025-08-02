@@ -2,6 +2,7 @@
 
 import { createServerClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
@@ -20,7 +21,7 @@ export async function login(prevState: any, formData: FormData) {
 
   if (!validatedFields.success) {
     return {
-      error: validatedFields.error.flatten().fieldErrors,
+      error: 'Campos inválidos. Por favor, revisa tus datos.',
     };
   }
   
@@ -47,24 +48,25 @@ export async function signup(prevState: any, formData: FormData) {
 
     if (!validatedFields.success) {
         return {
-            error: validatedFields.error.flatten().fieldErrors,
+             error: validatedFields.error.flatten().fieldErrors,
         };
     }
 
     const supabase = createServerClient();
     const { email, password } = validatedFields.data;
+    const origin = headers().get('origin');
     
     // The username will be extracted from the email before the @
-    const username = email.split('@')[0];
+    const username = email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '');
 
     const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
             data: {
-                user_name: username, // Pass username to be used by the trigger
+                user_name: username,
             },
-            emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
+            emailRedirectTo: `${origin}/auth/callback`,
         }
     });
 
@@ -74,6 +76,7 @@ export async function signup(prevState: any, formData: FormData) {
                 error: 'Este correo electrónico ya está registrado.'
             }
         }
+        console.error('Signup Error:', error);
         return {
             error: 'No se pudo crear la cuenta. Por favor, inténtalo de nuevo.',
         };
@@ -86,4 +89,25 @@ export async function logout() {
   const supabase = createServerClient();
   await supabase.auth.signOut();
   redirect('/login');
+}
+
+export async function signInWithGoogle() {
+  const supabase = createServerClient();
+  const origin = headers().get('origin');
+
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: `${origin}/auth/callback`,
+    },
+  });
+
+  if (error) {
+    console.error('Google Sign-In Error:', error);
+    redirect('/login?error=No se pudo iniciar sesión con Google');
+  }
+
+  if (data.url) {
+    redirect(data.url);
+  }
 }
