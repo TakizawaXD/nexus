@@ -3,6 +3,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import Sidebar from '@/components/layout/Sidebar';
 import { cn } from '@/lib/utils';
+import { ThemeProvider } from '@/components/theme/ThemeProvider';
 
 export const metadata: Metadata = {
   title: {
@@ -27,18 +28,25 @@ export default function RootLayout({
       <body className={cn(
           "min-h-screen bg-background font-body antialiased"
         )}>
-        <div className="flex min-h-screen w-full">
-          <div className="flex-1 flex justify-center">
-            <Sidebar />
-            <main className="flex w-full max-w-2xl flex-col border-x border-border">
-              {children}
-            </main>
-            <div className="hidden lg:block w-80">
-              {/* El contenido de la barra lateral derecha puede ir aquí */}
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <div className="flex min-h-screen w-full">
+            <div className="flex-1 flex justify-center">
+              <Sidebar />
+              <main className="flex w-full max-w-2xl flex-col border-x border-border">
+                {children}
+              </main>
+              <div className="hidden lg:block w-80">
+                {/* El contenido de la barra lateral derecha puede ir aquí */}
+              </div>
             </div>
           </div>
-        </div>
-        <Toaster />
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );

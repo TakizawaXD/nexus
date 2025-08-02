@@ -51,8 +51,12 @@ export default async function ProfilePage({
 
   return (
     <div>
-        <div className="h-48 bg-muted/50" data-ai-hint="abstract background">
-            <img src="https://placehold.co/600x200.png" alt="Profile banner" className="h-full w-full object-cover" />
+        <div className="h-48 bg-muted" data-ai-hint="abstract background">
+            <img 
+              src={profile.banner_url ?? 'https://placehold.co/600x200.png'} 
+              alt="Profile banner" 
+              className="h-full w-full object-cover" 
+            />
         </div>
         <div className="p-4">
             <div className='flex justify-between items-start'>

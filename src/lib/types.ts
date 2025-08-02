@@ -14,3 +14,10 @@ export type Comment = Database['public']['Tables']['comments']['Row'];
 export type PostWithAuthor = Database['public']['Views']['posts_with_author']['Row'];
 
 export type CommentWithAuthor = Database['public']['Views']['comments_with_author']['Row'];
+
+// MockUser can be removed if not needed elsewhere, but it's good for local testing.
+export interface MockUser extends User {
+  username: string;
+  full_name: string;
+  avatar_url: string;
+}

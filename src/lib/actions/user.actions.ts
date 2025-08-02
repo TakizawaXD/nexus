@@ -87,6 +87,27 @@ export async function toggleFollow(profileId: string, isFollowing: boolean) {
   return { success: true };
 }
 
+async function uploadImage(supabase: ReturnType<typeof createServerClient>, userId: string, file: File, bucket: 'avatars' | 'banners'): Promise<string | null> {
+    if (!file || file.size === 0) {
+        return null;
+    }
+
+    const fileExt = file.name.split('.').pop();
+    const filePath = `${userId}/${Math.random()}.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage
+        .from(bucket)
+        .upload(filePath, file);
+        
+    if (uploadError) {
+        console.error(`Error uploading ${bucket}:`, uploadError);
+        throw new Error(`Error al subir la imagen: ${uploadError.message}`);
+    }
+
+    const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(filePath);
+    return publicUrl;
+}
+
 export async function updateProfile(prevState: any, formData: FormData) {
     const supabase = createServerClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -111,64 +132,61 @@ export async function updateProfile(prevState: any, formData: FormData) {
     
     const { username, fullName, bio } = validatedFields.data;
 
-    // Check if username is already taken by another user
-    const { data: existingProfile, error: existingProfileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('username', username)
-        .not('id', 'eq', user.id)
-        .single();
-    
-    if (existingProfile) {
-        return {
-            success: false,
-            message: 'El nombre de usuario ya está en uso.',
-            errors: { username: ['Este nombre de usuario ya está en uso.'] }
+    try {
+        // Check if username is already taken by another user
+        const { data: existingProfile } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('username', username)
+            .not('id', 'eq', user.id)
+            .single();
+        
+        if (existingProfile) {
+            return {
+                success: false,
+                message: 'El nombre de usuario ya está en uso.',
+                errors: { username: ['Este nombre de usuario ya está en uso.'] }
+            }
         }
-    }
-    
-    const { error } = await supabase
-        .from('profiles')
-        .update({
+
+        // Handle image uploads in parallel
+        const avatarFile = formData.get('avatar') as File;
+        const bannerFile = formData.get('banner') as File;
+
+        const [avatarUrl, bannerUrl] = await Promise.all([
+            uploadImage(supabase, user.id, avatarFile, 'avatars'),
+            uploadImage(supabase, user.id, bannerFile, 'banners')
+        ]);
+
+        const profileDataToUpdate: Partial<Database['public']['Tables']['profiles']['Update']> = {
             username,
             full_name: fullName,
             bio,
             updated_at: new Date().toISOString(),
-        })
-        .eq('id', user.id);
+        };
 
-    if (error) {
-        return { success: false, message: error.message, errors: null };
-    }
-
-    // Handle avatar upload
-    const avatarFile = formData.get('avatar') as File;
-    if (avatarFile && avatarFile.size > 0) {
-        const fileExt = avatarFile.name.split('.').pop();
-        const filePath = `${user.id}/${Math.random()}.${fileExt}`;
-
-        const { error: uploadError } = await supabase.storage
-            .from('avatars')
-            .upload(filePath, avatarFile);
-            
-        if (uploadError) {
-             return { success: false, message: `Error al subir el avatar: ${uploadError.message}`, errors: null };
+        if (avatarUrl) {
+            profileDataToUpdate.avatar_url = avatarUrl;
         }
 
-        const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(filePath);
-
-        const { error: urlUpdateError } = await supabase
-            .from('profiles')
-            .update({ avatar_url: publicUrl })
-            .eq('id', user.id);
+        if (bannerUrl) {
+            profileDataToUpdate.banner_url = bannerUrl;
+        }
         
-        if (urlUpdateError) {
-            return { success: false, message: `Error al actualizar la URL del avatar: ${urlUpdateError.message}`, errors: null };
+        const { error } = await supabase
+            .from('profiles')
+            .update(profileDataToUpdate)
+            .eq('id', user.id);
+
+        if (error) {
+            throw new Error(error.message);
         }
+
+        revalidatePath(`/u/${username}`);
+        revalidatePath('/settings/profile');
+
+        return { success: true, message: '¡Perfil actualizado con éxito!', errors: null };
+    } catch (e: any) {
+        return { success: false, message: e.message, errors: null };
     }
-
-    revalidatePath(`/u/${username}`);
-    revalidatePath('/settings/profile');
-
-    return { success: true, message: '¡Perfil actualizado con éxito!', errors: null };
 }

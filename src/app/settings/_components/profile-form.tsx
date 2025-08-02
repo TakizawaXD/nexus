@@ -18,8 +18,12 @@ export function ProfileForm({ profile }: { profile: Profile }) {
     const { toast } = useToast()
     const [initialState, setInitialState] = useState({ success: false, message: '', errors: null });
     const [state, formAction] = useFormState(updateProfile, initialState);
+    
     const [avatarPreview, setAvatarPreview] = useState<string | null>(profile.avatar_url);
-    const fileInputRef = useRef<HTMLInputElement>(null);
+    const avatarFileInputRef = useRef<HTMLInputElement>(null);
+
+    const [bannerPreview, setBannerPreview] = useState<string | null>(profile.banner_url);
+    const bannerFileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         if (state.message) {
@@ -31,12 +35,16 @@ export function ProfileForm({ profile }: { profile: Profile }) {
         }
     }, [state, toast]);
 
-    const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'banner') => {
         const file = event.target.files?.[0];
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
-                setAvatarPreview(reader.result as string);
+                if(type === 'avatar') {
+                    setAvatarPreview(reader.result as string);
+                } else {
+                    setBannerPreview(reader.result as string);
+                }
             };
             reader.readAsDataURL(file);
         }
@@ -44,6 +52,29 @@ export function ProfileForm({ profile }: { profile: Profile }) {
     
     return (
         <form action={formAction} className="space-y-8">
+            <div>
+                <Label htmlFor="banner">Banner</Label>
+                 <div className="mt-2 aspect-video w-full max-w-lg overflow-hidden rounded-lg border">
+                    <img 
+                        src={bannerPreview || 'https://placehold.co/600x200.png'} 
+                        alt="Banner preview" 
+                        className="h-full w-full object-cover" 
+                    />
+                </div>
+                <input
+                    type="file"
+                    id="banner"
+                    name="banner"
+                    accept="image/png, image/jpeg"
+                    className="hidden"
+                    ref={bannerFileInputRef}
+                    onChange={(e) => handleFileChange(e, 'banner')}
+                />
+                <Button type="button" variant="outline" className="mt-2" onClick={() => bannerFileInputRef.current?.click()}>
+                    Cambiar banner
+                </Button>
+            </div>
+
             <div>
                 <Label htmlFor="avatar">Foto de perfil</Label>
                 <div className="mt-2 flex items-center gap-4">
@@ -57,11 +88,11 @@ export function ProfileForm({ profile }: { profile: Profile }) {
                         name="avatar"
                         accept="image/png, image/jpeg"
                         className="hidden"
-                        ref={fileInputRef}
-                        onChange={handleAvatarChange}
+                        ref={avatarFileInputRef}
+                        onChange={(e) => handleFileChange(e, 'avatar')}
                     />
-                    <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
-                        Cambiar
+                    <Button type="button" variant="outline" onClick={() => avatarFileInputRef.current?.click()}>
+                        Cambiar foto
                     </Button>
                 </div>
             </div>

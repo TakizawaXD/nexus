@@ -6,6 +6,7 @@ import { NexoLogo } from '../shared/NexoLogo';
 import { CreatePostDialog } from '../posts/CreatePost';
 import { createServerClient } from '@/lib/supabase/server';
 import type { Profile } from '@/lib/types';
+import { ThemeSwitcher } from '../theme/ThemeSwitcher';
 
 export default async function Sidebar() {
   const supabase = createServerClient();
@@ -52,6 +53,7 @@ export default async function Sidebar() {
       </nav>
 
       <div className="mt-auto flex w-full flex-col gap-2">
+        <ThemeSwitcher />
         {user && profile ? (
           <>
             <CreatePostDialog user={user} profile={profile}>
