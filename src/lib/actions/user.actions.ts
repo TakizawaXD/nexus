@@ -1,8 +1,10 @@
 'use server';
 
+import { createServerClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import type { Database } from '../database.types';
+import type { Profile } from '../types';
 
 const profileFormSchema = z.object({
   username: z
@@ -21,6 +23,28 @@ const profileFormSchema = z.object({
     .optional()
     .nullable(),
 });
+
+export async function getAuthProfile(): Promise<Profile | null> {
+    const supabase = createServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+        return null;
+    }
+
+    const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+    
+    if (error) {
+        console.error('Error fetching auth profile:', error);
+        return null;
+    }
+
+    return profile;
+}
 
 export async function getProfileWithPosts(username: string) {
     // MOCK IMPLEMENTATION

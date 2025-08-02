@@ -1,4 +1,4 @@
-import { Home, User, PenSquare } from 'lucide-react';
+import { Home, User, PenSquare, LogIn } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '../ui/button';
 import UserNav from '../auth/UserNav';
@@ -6,20 +6,27 @@ import { NexoLogo } from '../shared/NexoLogo';
 import { CreatePostDialog } from '../posts/CreatePost';
 import type { Profile } from '@/lib/types';
 import { ThemeSwitcher } from '../theme/ThemeSwitcher';
-import { MOCK_USER } from '@/lib/mock-data';
+import { createServerClient } from '@/lib/supabase/server';
+import { getAuthProfile } from '@/lib/actions/user.actions';
 
 export default async function Sidebar() {
-  const user = MOCK_USER;
-  const profile = MOCK_USER as Profile;
+  const supabase = createServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  const navItems = [
-    { href: '/', icon: Home, label: 'Inicio' },
-    {
-      href: `/u/${profile?.username}`,
-      icon: User,
-      label: 'Perfil',
-    },
-  ];
+  let profile: Profile | null = null;
+  if (user) {
+    profile = await getAuthProfile();
+  }
+
+  const navItems =
+    user && profile
+      ? [
+          { href: '/', icon: Home, label: 'Inicio' },
+          { href: `/u/${profile.username}`, icon: User, label: 'Perfil' },
+        ]
+      : [];
 
   return (
     <aside className="sticky top-0 hidden h-screen w-20 flex-col items-center border-r border-border p-4 sm:flex lg:w-64 lg:items-start">
@@ -30,27 +37,38 @@ export default async function Sidebar() {
 
       <nav className="flex flex-1 flex-col gap-2">
         {navItems.map((item) => (
-            <Link key={item.label} href={item.href}>
-              <Button
-                variant="ghost"
-                className="w-full justify-start gap-3 p-3 text-lg"
-              >
-                <item.icon className="h-6 w-6" />
-                <span className="hidden lg:inline">{item.label}</span>
-              </Button>
-            </Link>
-          ))}
+          <Link key={item.label} href={item.href}>
+            <Button
+              variant="ghost"
+              className="w-full justify-start gap-3 p-3 text-lg"
+            >
+              <item.icon className="h-6 w-6" />
+              <span className="hidden lg:inline">{item.label}</span>
+            </Button>
+          </Link>
+        ))}
       </nav>
 
       <div className="mt-auto flex w-full flex-col gap-2">
         <ThemeSwitcher />
-        <CreatePostDialog user={user} profile={profile}>
-          <Button className="w-full justify-center gap-3 p-3 text-lg lg:justify-start">
-            <PenSquare className="h-6 w-6" />
-            <span className="hidden lg:inline">Publicar</span>
-          </Button>
-        </CreatePostDialog>
-        <UserNav user={user} profile={profile} />
+        {user && profile ? (
+          <>
+            <CreatePostDialog user={user} profile={profile}>
+              <Button className="w-full justify-center gap-3 p-3 text-lg lg:justify-start">
+                <PenSquare className="h-6 w-6" />
+                <span className="hidden lg:inline">Publicar</span>
+              </Button>
+            </CreatePostDialog>
+            <UserNav user={user} profile={profile} />
+          </>
+        ) : (
+          <Link href="/login">
+            <Button className="w-full justify-center gap-3 p-3 text-lg lg:justify-start">
+              <LogIn className="h-6 w-6" />
+              <span className="hidden lg:inline">Iniciar sesión</span>
+            </Button>
+          </Link>
+        )}
       </div>
     </aside>
   );
