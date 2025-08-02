@@ -12,9 +12,9 @@ export default async function Sidebar() {
   const supabase = createServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   
-  let profile: Profile | null = null;
+  let profile: Pick<Profile, 'username' | 'avatar_url' | 'full_name'> | null = null;
   if (user) {
-    const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+    const { data } = await supabase.from('profiles').select('username, avatar_url, full_name').eq('id', user.id).single();
     profile = data;
   }
 
@@ -57,7 +57,7 @@ export default async function Sidebar() {
         {user && profile ? (
           <>
             <CreatePostDialog user={user} profile={profile}>
-              <Button className="w-full justify-center gap-3 p-3 text-base lg:justify-start">
+              <Button className="w-full justify-center gap-3 p-3 text-lg lg:justify-start">
                 <PenSquare className="h-6 w-6" />
                 <span className="hidden lg:inline">Publicar</span>
               </Button>

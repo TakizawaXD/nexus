@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { createServerClient } from '../supabase/server';
 import { z } from 'zod';
-import { Database } from '../database.types';
+import type { Database } from '../database.types';
 
 const profileFormSchema = z.object({
   username: z
@@ -25,25 +25,39 @@ const profileFormSchema = z.object({
 
 export async function getProfileWithPosts(username: string) {
     const supabase = createServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
     const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('*, followers_count:followers(count), following_count:following(count)')
+        .select('*, followers_count:followers!followers_following_id_fkey(count), following_count:following:followers!followers_follower_id_fkey(count)')
         .eq('username', username)
         .single();
 
     if (profileError || !profile) {
-        return { profile: null, posts: [], error: 'Perfil no encontrado' };
+        console.error('Error fetching profile:', profileError);
+        return { profile: null, posts: [], error: 'Perfil no encontrado', isFollowing: false };
     }
 
     const { data: posts, error: postsError } = await supabase
-        .from('posts_with_author')
-        .select('*')
+        .rpc('get_posts_with_likes', { p_user_id: user?.id })
         .eq('author_id', profile.id)
         .order('created_at', { ascending: false });
 
+    let isFollowing = false;
+    if (user && user.id !== profile.id) {
+        const { data: follow } = await supabase
+            .from('followers')
+            .select('follower_id')
+            .eq('following_id', profile.id)
+            .eq('follower_id', user.id)
+            .maybeSingle();
+        isFollowing = !!follow;
+    }
+
     return {
         profile,
-        posts,
+        posts: posts || [],
+        isFollowing,
         error: postsError?.message
     }
 }
@@ -65,6 +79,7 @@ export async function toggleFollow(profileId: string, isFollowing: boolean) {
         .eq('following_id', profileId)
     
     if (error) {
+      console.error('Error unfollowing:', error);
       return { success: false, error: error.message };
     }
 
@@ -77,11 +92,16 @@ export async function toggleFollow(profileId: string, isFollowing: boolean) {
             following_id: profileId,
         })
     if (error) {
+        console.error('Error following:', error);
         return { success: false, error: error.message };
     }
   }
 
-  revalidatePath(`/u/${profileId}`);
+  // Revalidate the path of the user being followed/unfollowed
+  const { data: profile } = await supabase.from('profiles').select('username').eq('id', profileId).single();
+  if (profile) {
+    revalidatePath(`/u/${profile.username}`);
+  }
   revalidatePath('/');
   
   return { success: true };
@@ -93,19 +113,19 @@ async function uploadImage(supabase: ReturnType<typeof createServerClient>, user
     }
 
     const fileExt = file.name.split('.').pop();
-    const filePath = `${userId}/${Math.random()}.${fileExt}`;
+    const filePath = `${userId}/${Date.now()}.${fileExt}`;
 
     const { error: uploadError } = await supabase.storage
         .from(bucket)
-        .upload(filePath, file);
+        .upload(filePath, file, { upsert: true }); // Use upsert to allow overwriting
         
     if (uploadError) {
         console.error(`Error uploading ${bucket}:`, uploadError);
         throw new Error(`Error al subir la imagen: ${uploadError.message}`);
     }
 
-    const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(filePath);
-    return publicUrl;
+    const { data } = supabase.storage.from(bucket).getPublicUrl(filePath);
+    return data.publicUrl;
 }
 
 export async function updateProfile(prevState: any, formData: FormData) {
@@ -149,14 +169,8 @@ export async function updateProfile(prevState: any, formData: FormData) {
             }
         }
 
-        // Handle image uploads in parallel
         const avatarFile = formData.get('avatar') as File;
         const bannerFile = formData.get('banner') as File;
-
-        const [avatarUrl, bannerUrl] = await Promise.all([
-            uploadImage(supabase, user.id, avatarFile, 'avatars'),
-            uploadImage(supabase, user.id, bannerFile, 'banners')
-        ]);
 
         const profileDataToUpdate: Partial<Database['public']['Tables']['profiles']['Update']> = {
             username,
@@ -164,6 +178,11 @@ export async function updateProfile(prevState: any, formData: FormData) {
             bio,
             updated_at: new Date().toISOString(),
         };
+
+        const [avatarUrl, bannerUrl] = await Promise.all([
+            uploadImage(supabase, user.id, avatarFile, 'avatars'),
+            uploadImage(supabase, user.id, bannerFile, 'banners')
+        ]);
 
         if (avatarUrl) {
             profileDataToUpdate.avatar_url = avatarUrl;

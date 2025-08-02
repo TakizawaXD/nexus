@@ -18,7 +18,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useToast } from "@/hooks/use-toast";
-import { deletePost } from "@/lib/actions/post.actions";
+import * as postActions from "@/lib/actions/post.actions";
 import type { PostWithAuthor } from "@/lib/types";
 import { MoreHorizontal, Trash2, Loader2 } from 'lucide-react';
 import { useRouter } from "next/navigation";
@@ -32,12 +32,15 @@ export default function PostActions({ post }: { post: PostWithAuthor }) {
 
   const handleDelete = () => {
     startDeleteTransition(async () => {
-      const result = await deletePost(post.id);
+      const result = await postActions.deletePost(post.id);
       if (result.success) {
         toast({
           title: "Publicación eliminada",
         });
-        router.push('/');
+        // The realtime subscription will remove the post from the UI
+        if(window.location.pathname.includes('/post/')) {
+            router.push('/');
+        }
         router.refresh();
       } else {
         toast({

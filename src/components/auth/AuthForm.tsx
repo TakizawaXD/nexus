@@ -30,7 +30,7 @@ function AuthSubmitButton({ isSignUp }: { isSignUp: boolean }) {
 function GoogleSignInButton() {
     const { pending } = useFormStatus();
     return (
-        <Button variant="outline" type="submit" disabled={pending} formAction={signInWithGoogle}>
+        <Button variant="outline" type="submit" disabled={pending} formAction={signInWithGoogle} className="w-full">
              {pending ? ( <Loader2 className="mr-2 h-4 w-4 animate-spin" />) : (
                 <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="mr-2 h-4 w-4">
                     <title>Google</title>
@@ -45,15 +45,17 @@ function GoogleSignInButton() {
 export default function AuthForm({ searchParams }: { searchParams: { message: string, code: string, next: string } }) {
   const [isSignUp, setIsSignUp] = useState(false);
   const [loginState, loginAction] = useFormState(login, { message: '' });
-  const [signupState, signupAction] = useFormState(signup, { message: '', success: false });
+  const [signupState, signupAction] = useFormState(signup, { message: '', success: false, errors: null });
 
   const [message, setMessage] = useState(searchParams.message || '');
   const [isSuccess, setIsSuccess] = useState(signupState.success);
+  const [errors, setErrors] = useState<any | null>(null);
 
   useEffect(() => {
     if (loginState?.message) {
       setMessage(loginState.message);
       setIsSuccess(false);
+      setErrors(null);
     }
   }, [loginState]);
 
@@ -61,6 +63,7 @@ export default function AuthForm({ searchParams }: { searchParams: { message: st
     if (signupState?.message) {
         setMessage(signupState.message);
         setIsSuccess(signupState.success);
+        setErrors(signupState.errors);
         if(signupState.success) {
             setIsSignUp(false);
         }
@@ -95,6 +98,7 @@ export default function AuthForm({ searchParams }: { searchParams: { message: st
                 <User className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input id="username" name="username" placeholder="tu_usuario" required className="pl-8" />
               </div>
+              {errors?.username && <p className="text-sm font-medium text-destructive">{errors.username[0]}</p>}
             </div>
           )}
           <div className="grid gap-2">
@@ -103,6 +107,7 @@ export default function AuthForm({ searchParams }: { searchParams: { message: st
               <AtSign className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input id="email" name="email" type="email" placeholder="m@ejemplo.com" required className="pl-8" />
             </div>
+             {errors?.email && <p className="text-sm font-medium text-destructive">{errors.email[0]}</p>}
           </div>
           <div className="grid gap-2">
             <Label htmlFor="password">Contraseña</Label>
@@ -110,6 +115,7 @@ export default function AuthForm({ searchParams }: { searchParams: { message: st
               <KeyRound className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input id="password" name="password" type="password" required className="pl-8" placeholder="••••••••" minLength={6} />
             </div>
+             {errors?.password && <p className="text-sm font-medium text-destructive">{errors.password[0]}</p>}
           </div>
           <AuthSubmitButton isSignUp={isSignUp} />
         </form>
@@ -129,6 +135,7 @@ export default function AuthForm({ searchParams }: { searchParams: { message: st
           <button onClick={() => { 
               setIsSignUp(!isSignUp);
               setMessage('');
+              setErrors(null);
             }} 
             className="font-semibold text-primary hover:underline">
             {isSignUp ? 'Iniciar Sesión' : 'Registrarse'}

@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import PostActions from './PostActions';
 import { useToast } from '@/hooks/use-toast';
-import { toggleLike } from '@/lib/actions/post.actions';
+import * as postActions from '@/lib/actions/post.actions';
 
 export default function PostCard({ post, user }: { post: PostWithAuthor, user: User | null }) {
     const [optimisticLikes, setOptimisticLikes] = useState(post.likes_count);
@@ -28,14 +28,13 @@ export default function PostCard({ post, user }: { post: PostWithAuthor, user: U
         if (isLikePending) return;
 
         startLikeTransition(async () => {
-            // Optimistic update
             const originalLikes = optimisticLikes;
             const originalHasLiked = optimisticHasLiked;
             
             setOptimisticHasLiked(prev => !prev);
             setOptimisticLikes(prev => (optimisticHasLiked ? prev - 1 : prev + 1));
             
-            const result = await toggleLike(post.id, optimisticHasLiked);
+            const result = await postActions.toggleLike(post.id, optimisticHasLiked);
 
             if (result.error) {
                 // Revert optimistic update on error
@@ -46,6 +45,8 @@ export default function PostCard({ post, user }: { post: PostWithAuthor, user: U
                     description: result.error,
                     variant: "destructive"
                 });
+            } else {
+                router.refresh();
             }
         });
     }

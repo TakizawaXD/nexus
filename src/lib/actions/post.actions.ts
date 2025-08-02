@@ -37,13 +37,10 @@ async function createPost(formData: FormData) {
 
 async function getPosts() {
     const supabase = createServerClient();
-     // Required to await this to satisfy Next.js SSR rules
-     // see: https://github.com/supabase/auth-helpers/issues/527
-    await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
 
     const { data, error } = await supabase
-        .from('posts_with_author')
-        .select('*')
+        .rpc('get_posts_with_likes', { p_user_id: user?.id })
         .order('created_at', { ascending: false });
 
     if (error) {
@@ -56,14 +53,18 @@ async function getPosts() {
 
 async function getPostById(id: string) {
     const supabase = createServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
 
     const { data, error } = await supabase
-        .from('posts_with_author')
-        .select('*')
-        .eq('id', id)
+        .rpc('get_post_details', { p_post_id: id, p_user_id: user?.id })
         .single();
     
-    return { post: data, error: error?.message };
+    if (error) {
+        console.error('Error fetching post:', error);
+        return { post: null, error: 'No se pudo cargar la publicación.' };
+    }
+
+    return { post: data, error: null };
 }
 
 async function getCommentsByPostId(postId: string) {
@@ -75,7 +76,12 @@ async function getCommentsByPostId(postId: string) {
         .eq('post_id', postId)
         .order('created_at', { ascending: false });
         
-    return { comments: data, error: error?.message };
+    if (error) {
+        console.error('Error fetching comments:', error);
+        return { comments: [], error: 'No se pudieron cargar los comentarios.' };
+    }
+        
+    return { comments: data, error: null };
 }
 
 
@@ -99,6 +105,7 @@ async function addComment(postId: string, formData: FormData) {
     });
 
     if (error) {
+        console.error('Error adding comment:', error);
         return { error: 'No se pudo agregar el comentario.' };
     }
 
@@ -114,24 +121,16 @@ async function deletePost(postId: string) {
         return { success: false, error: 'No autenticado.' };
     }
     
-    // First, check if the post belongs to the user
-    const { data: post } = await supabase
-        .from('posts')
-        .select('author_id')
-        .eq('id', postId)
-        .single();
-        
-    if (post?.author_id !== user.id) {
-        return { success: false, error: 'No autorizado para eliminar esta publicación.' };
-    }
-
+    // RLS will enforce that only the author can delete their post.
     const { error } = await supabase.from('posts').delete().eq('id', postId);
 
     if (error) {
+        console.error('Error deleting post:', error);
         return { success: false, error: 'No se pudo eliminar la publicación.' };
     }
     
     revalidatePath('/');
+    revalidatePath('/post/[id]', 'page');
     return { success: true };
 }
 
@@ -153,6 +152,7 @@ async function toggleLike(postId: string, hasLiked: boolean) {
             .eq('user_id', user.id);
         
         if (error) {
+            console.error('Error unliking post:', error);
             return { error: 'No se pudo quitar el "me gusta".' };
         }
     } else {
@@ -162,11 +162,12 @@ async function toggleLike(postId: string, hasLiked: boolean) {
             .insert({ post_id: postId, user_id: user.id });
         
         if (error) {
+             console.error('Error liking post:', error);
              return { error: 'No se pudo dar "me gusta".' };
         }
     }
     
-    revalidatePath(`/`);
+    revalidatePath('/');
     revalidatePath(`/post/${postId}`);
     return {};
 }

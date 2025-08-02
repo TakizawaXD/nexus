@@ -26,7 +26,7 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body className={cn(
-          "min-h-screen bg-background font-body antialiased"
+          "min-h-screen bg-background font-sans antialiased"
         )}>
         <ThemeProvider
           attribute="class"
@@ -35,15 +35,15 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <div className="flex min-h-screen w-full">
-            <div className="flex-1 flex justify-center">
-              <Sidebar />
-              <main className="flex w-full max-w-2xl flex-col border-x border-border">
-                {children}
-              </main>
-              <div className="hidden lg:block w-80">
-                {/* El contenido de la barra lateral derecha puede ir aquí */}
-              </div>
-            </div>
+            <Sidebar />
+            <main className="flex flex-1 justify-center">
+                <div className="w-full max-w-2xl flex-col border-x border-border">
+                    {children}
+                </div>
+                <div className="hidden lg:block w-80 p-4">
+                    {/* Right sidebar content can go here */}
+                </div>
+            </main>
           </div>
           <Toaster />
         </ThemeProvider>
