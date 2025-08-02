@@ -12,33 +12,39 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import type { Profile } from '@/lib/types';
-import type { User } from '@supabase/supabase-js';
 import { Loader2, Send } from 'lucide-react';
 import { useRef, useState, useTransition, type ReactNode } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { createPost as createPostAction } from '@/lib/actions/post.actions';
 
 type CreatePostFormProps = {
-    user: User;
     profile: Profile;
     onSuccess: () => void;
 }
 
-function CreatePostForm({ user, profile, onSuccess }: CreatePostFormProps) {
+function CreatePostForm({ profile, onSuccess }: CreatePostFormProps) {
   const [isPending, startTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
   const { toast } = useToast();
 
   const handleAction = (formData: FormData) => {
     startTransition(async () => {
-        // Mock action
-        console.log('New post:', formData.get('content'));
-        toast({
-            title: 'Éxito',
-            description: 'Tu publicación ha sido creada (simulado).',
-        });
-        formRef.current?.reset();
-        onSuccess();
+        const result = await createPostAction(formData);
+        if (result.error) {
+            toast({
+                title: 'Error',
+                description: result.error,
+                variant: 'destructive',
+            });
+        } else {
+             toast({
+                title: 'Éxito',
+                description: 'Tu publicación ha sido creada.',
+            });
+            formRef.current?.reset();
+            onSuccess();
+        }
     });
   }
 
@@ -76,13 +82,13 @@ function CreatePostForm({ user, profile, onSuccess }: CreatePostFormProps) {
   );
 }
 
-export function CreatePostDialog({ user, profile, children }: { user: User, profile: Profile, children: ReactNode }) {
+export function CreatePostDialog({ profile, children }: { profile: Profile, children: ReactNode }) {
     const [open, setOpen] = useState(false);
     const router = useRouter();
 
     const handleSuccess = () => {
         setOpen(false);
-        // router.refresh(); // No need to refresh with mock data
+        router.refresh(); 
     }
     
     return (
@@ -94,14 +100,14 @@ export function CreatePostDialog({ user, profile, children }: { user: User, prof
                 <DialogHeader className="p-4 border-b">
                     <DialogTitle>Crear Publicación</DialogTitle>
                 </DialogHeader>
-                <CreatePostForm user={user} profile={profile} onSuccess={handleSuccess} />
+                <CreatePostForm profile={profile} onSuccess={handleSuccess} />
             </DialogContent>
         </Dialog>
     )
 }
 
 // This is the inline version for the main feed
-export default function CreatePost({ user, profile }: { user: User, profile: Profile }) {
+export default function CreatePost({ profile }: { profile: Profile }) {
   const [isPending, startTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -110,14 +116,23 @@ export default function CreatePost({ user, profile }: { user: User, profile: Pro
 
   const handleAction = async (formData: FormData) => {
     startTransition(async () => {
-        console.log('New post:', formData.get('content'));
-        toast({
-            title: 'Éxito',
-            description: 'Publicación creada (simulado).',
-        });
-        formRef.current?.reset();
-        if(textareaRef.current) textareaRef.current.style.height = 'auto';
-        // router.refresh();
+        const result = await createPostAction(formData);
+
+        if (result.error) {
+             toast({
+                title: 'Error',
+                description: result.error,
+                variant: 'destructive',
+            });
+        } else {
+            toast({
+                title: 'Éxito',
+                description: 'Publicación creada.',
+            });
+            formRef.current?.reset();
+            if(textareaRef.current) textareaRef.current.style.height = 'auto';
+            router.refresh();
+        }
     });
   };
 

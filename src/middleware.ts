@@ -54,23 +54,9 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  const { data: { user } } = await supabase.auth.getUser();
-
-  const { pathname } = request.nextUrl;
-
-  // Rutas públicas que no requieren autenticación
-  const publicRoutes = ['/login', '/register', '/auth/callback'];
-
-  // Se comenta la redirección para permitir el acceso público
-  if (!user && !publicRoutes.includes(pathname)) {
-    // Si el usuario no está autenticado y la ruta no es pública, redirigir a login
-    // return NextResponse.redirect(new URL('/login', request.url));
-  }
-  
-  if (user && (pathname === '/login' || pathname === '/register')) {
-    // Si el usuario está autenticado y trata de acceder a login/register, redirigir a la home
-    return NextResponse.redirect(new URL('/', request.url));
-  }
+  // Refresh session if expired - required for Server Components
+  // https://supabase.com/docs/guides/auth/auth-helpers/nextjs#managing-session-with-middleware
+  await supabase.auth.getSession();
 
   return response;
 }

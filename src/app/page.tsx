@@ -1,17 +1,14 @@
 import CreatePost from '@/components/posts/CreatePost';
 import Feed from '@/components/posts/Feed';
 import { Separator } from '@/components/ui/separator';
-import * as postActions from '@/lib/actions/post.actions';
-import { getAuthProfile } from '@/lib/actions/user.actions';
-import { createServerClient } from '@/lib/supabase/server';
 import Sidebar from '@/components/layout/Sidebar';
+import { MOCK_POSTS, MOCK_USER } from '@/lib/mock-data';
+import type { PostWithAuthor } from '@/lib/types';
 
 
 export default async function Home() {
-  const supabase = createServerClient();
-  const { data: { user }} = await supabase.auth.getUser();
-  const profile = await getAuthProfile();
-  const { posts, error } = await postActions.getPosts();
+  const profile = MOCK_USER;
+  const posts: PostWithAuthor[] = MOCK_POSTS;
 
   return (
     <div className="flex min-h-screen w-full">
@@ -22,11 +19,11 @@ export default async function Home() {
             <h1 className="text-xl font-bold">Inicio</h1>
           </header>
           
-          {user && profile && <CreatePost user={user} profile={profile} />}
+          <CreatePost profile={profile} />
 
           <Separator />
 
-          <Feed serverPosts={posts ?? []} user={user} />
+          <Feed serverPosts={posts} user={MOCK_USER} />
         </div>
         <div className="hidden lg:block w-80 p-4">
             {/* Right sidebar content can go here */}

@@ -1,8 +1,7 @@
 'use client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import type { PostWithAuthor } from '@/lib/types';
-import type { User } from '@supabase/supabase-js';
+import type { PostWithAuthor, User } from '@/lib/types';
 import { formatDistanceToNowStrict } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { MessageCircle, Heart } from 'lucide-react';
@@ -12,6 +11,7 @@ import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import PostActions from './PostActions';
 import { useToast } from '@/hooks/use-toast';
+import { toggleLike } from '@/lib/actions/post.actions';
 
 export default function PostCard({ post, user }: { post: PostWithAuthor, user: User | null }) {
     const [optimisticLikes, setOptimisticLikes] = useState(post.likes_count);
@@ -31,9 +31,26 @@ export default function PostCard({ post, user }: { post: PostWithAuthor, user: U
         }
         if (isLikePending) return;
 
-        startLikeTransition(() => {
-            setOptimisticHasLiked(prev => !prev);
-            setOptimisticLikes(prev => (optimisticHasLiked ? prev - 1 : prev + 1));
+        const currentHasLiked = optimisticHasLiked;
+        const currentLikes = optimisticLikes;
+
+        setOptimisticHasLiked(prev => !prev);
+        setOptimisticLikes(prev => (currentHasLiked ? prev - 1 : prev + 1));
+
+        startLikeTransition(async () => {
+            const result = await toggleLike(post.id, currentHasLiked);
+            if(result.error) {
+                // Revert optimistic update
+                setOptimisticHasLiked(currentHasLiked);
+                setOptimisticLikes(currentLikes);
+                toast({
+                    title: 'Error',
+                    description: 'No se pudo actualizar el "me gusta".',
+                    variant: 'destructive',
+                });
+            } else {
+                router.refresh();
+            }
         });
     }
 

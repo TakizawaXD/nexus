@@ -1,7 +1,6 @@
 'use client';
 
-import type { PostWithAuthor } from '@/lib/types';
-import type { User } from '@supabase/supabase-js';
+import type { PostWithAuthor, User } from '@/lib/types';
 import { useEffect, useState, useRef } from 'react';
 import PostCard from './PostCard';
 import { Skeleton } from '../ui/skeleton';

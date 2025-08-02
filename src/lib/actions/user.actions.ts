@@ -3,7 +3,6 @@
 import { createServerClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import type { Database } from '../database.types';
 import type { Profile } from '../types';
 
 const profileFormSchema = z.object({

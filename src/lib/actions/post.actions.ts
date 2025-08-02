@@ -56,9 +56,7 @@ async function deletePost(postId: string) {
 async function toggleLike(postId: string, hasLiked: boolean) {
     // MOCK IMPLEMENTATION
     console.log(`Toggling like for post ${postId}. Has liked: ${hasLiked}`);
-    revalidatePath('/');
-    revalidatePath(`/post/${postId}`);
-    return {};
+    return { success: true };
 }
 
 export {

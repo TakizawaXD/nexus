@@ -3,13 +3,11 @@
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Button } from '../ui/button';
 import { Textarea } from '../ui/textarea';
-import type { CommentWithAuthor, Profile } from '@/lib/types';
+import type { User } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
-import { useRef, useState, useTransition } from 'react';
-import { createServerClient } from '@/lib/supabase/server';
+import { useRef, useTransition } from 'react';
 import { addComment } from '@/lib/actions/post.actions';
 import { useToast } from '@/hooks/use-toast';
-import type { User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 
 type CreateCommentProps = {
@@ -49,8 +47,8 @@ export default function CreateComment({ user, postId }: CreateCommentProps) {
     e.target.style.height = `${e.target.scrollHeight}px`;
   };
 
-  const avatarUrl = user.user_metadata?.avatar_url;
-  const username = user.user_metadata?.user_name ?? 'U';
+  const avatarUrl = user?.user_metadata.avatar_url;
+  const username = user?.user_metadata.user_name ?? 'U';
   const fallback = username.charAt(0).toUpperCase();
 
   return (
