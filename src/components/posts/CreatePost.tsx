@@ -1,0 +1,175 @@
+'use client';
+
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  DialogClose,
+} from '@/components/ui/dialog';
+import { createClient } from '@/lib/supabase/client';
+import type { User } from '@supabase/supabase-js';
+import { Loader2, Send } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useRef, useState, type ReactNode } from 'react';
+
+function CreatePostForm({ user, onPostSuccess }: { user: User, onPostSuccess: () => void }) {
+  const [content, setContent] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  
+  const supabase = createClient();
+  const router = useRouter();
+
+  const handlePost = async () => {
+    if (content.trim().length === 0) return;
+
+    setIsSubmitting(true);
+    const { error } = await supabase
+      .from('posts')
+      .insert({ content: content, user_id: user.id });
+
+    if (!error) {
+      setContent('');
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto';
+      }
+      onPostSuccess();
+      router.refresh(); // Refresh server components
+    } else {
+        console.error(error);
+        // TODO: show toast error
+    }
+    setIsSubmitting(false);
+  };
+
+  const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setContent(e.target.value);
+      e.target.style.height = 'auto';
+      e.target.style.height = `${e.target.scrollHeight}px`;
+  }
+
+  const avatarUrl = user.user_metadata.avatar_url;
+  const username = user.user_metadata.username ?? 'U';
+  const fallback = username.charAt(0).toUpperCase();
+
+  return (
+    <div className="flex w-full flex-col">
+        <div className="flex gap-4 p-4">
+            <Avatar>
+                <AvatarImage src={avatarUrl} alt={username} />
+                <AvatarFallback>{fallback}</AvatarFallback>
+            </Avatar>
+            <Textarea
+            ref={textareaRef}
+            value={content}
+            onChange={handleInput}
+            placeholder="What's happening?"
+            maxLength={280}
+            className="w-full min-h-[80px] resize-none border-none bg-transparent p-0 text-lg focus-visible:ring-0"
+            rows={2}
+            />
+        </div>
+        <DialogFooter className="p-4 border-t">
+            <span className="text-sm text-muted-foreground mr-auto">{280 - content.length} characters left</span>
+            <DialogClose asChild>
+                <Button variant="ghost">Cancel</Button>
+            </DialogClose>
+            <Button onClick={handlePost} disabled={isSubmitting || content.trim().length === 0}>
+                {isSubmitting ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                    <Send className="mr-2 h-4 w-4" />
+                )}
+                Post
+            </Button>
+        </DialogFooter>
+    </div>
+  );
+}
+
+export function CreatePostDialog({ user, children }: { user: User, children: ReactNode }) {
+    const [open, setOpen] = useState(false);
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                {children}
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-xl p-0 gap-0">
+                <DialogHeader className="p-4 border-b">
+                    <DialogTitle>Create Post</DialogTitle>
+                </DialogHeader>
+                <CreatePostForm user={user} onPostSuccess={() => setOpen(false)} />
+            </DialogContent>
+        </Dialog>
+    )
+}
+
+// This is the inline version for the main feed
+export default function CreatePost({ user }: { user: User }) {
+  const [content, setContent] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const supabase = createClient();
+  const router = useRouter();
+
+  const handlePost = async () => {
+    if (content.trim().length === 0) return;
+
+    setIsSubmitting(true);
+    const { error } = await supabase
+      .from('posts')
+      .insert({ content: content, user_id: user.id });
+
+    if (!error) {
+      setContent('');
+      if (textareaRef.current) textareaRef.current.style.height = 'auto';
+      router.refresh();
+    } else {
+      console.error(error);
+    }
+    setIsSubmitting(false);
+  };
+
+  const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setContent(e.target.value);
+    e.target.style.height = 'auto';
+    e.target.style.height = `${e.target.scrollHeight}px`;
+  };
+
+  const avatarUrl = user.user_metadata.avatar_url;
+  const username = user.user_metadata.username ?? 'U';
+  const fallback = username.charAt(0).toUpperCase();
+
+  return (
+    <div className="flex gap-4 border-b border-border p-4">
+      <Avatar>
+        <AvatarImage src={avatarUrl} alt={username} />
+        <AvatarFallback>{fallback}</AvatarFallback>
+      </Avatar>
+      <div className="flex w-full flex-col">
+        <Textarea
+          ref={textareaRef}
+          value={content}
+          onChange={handleInput}
+          placeholder="What's happening?"
+          maxLength={280}
+          className="w-full resize-none border-none bg-transparent p-0 text-lg focus-visible:ring-0"
+          rows={1}
+        />
+        <div className="mt-2 flex items-center justify-end">
+          <span className="mr-4 text-sm text-muted-foreground">{280 - content.length}</span>
+          <Button onClick={handlePost} disabled={isSubmitting || content.trim().length === 0} size="sm">
+            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Post
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
