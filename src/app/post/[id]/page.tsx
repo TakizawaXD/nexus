@@ -7,20 +7,17 @@ import { notFound } from "next/navigation";
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
-import { createServerClient } from "@/lib/supabase/server";
-import { getPostById, getCommentsByPostId } from "@/lib/actions/post.actions";
+import { MOCK_POSTS, MOCK_COMMENTS, MOCK_USER } from "@/lib/mock-data";
 
 export default async function PostPage({ params }: { params: { id: string }}) {
-    const supabase = createServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = MOCK_USER;
+    const post = MOCK_POSTS.find(p => p.id === params.id) as PostWithAuthor | undefined;
 
-    const { post, error: postError } = await getPostById(params.id);
-
-    if (postError || !post) {
+    if (!post) {
         notFound();
     }
     
-    const { comments, error: commentsError } = await getCommentsByPostId(params.id);
+    const comments = MOCK_COMMENTS.filter(c => c.post_id === params.id);
 
     return (
         <div className="w-full">
@@ -51,7 +48,6 @@ export default async function PostPage({ params }: { params: { id: string }}) {
                         <p>Aún no hay comentarios. ¡Sé el primero en responder!</p>
                     </div>
                 )}
-                 {commentsError && <div className="p-8 text-center text-destructive">{commentsError}</div>}
             </div>
         </div>
     );

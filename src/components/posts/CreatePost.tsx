@@ -16,7 +16,6 @@ import type { User } from '@supabase/supabase-js';
 import { Loader2, Send } from 'lucide-react';
 import { useRef, useState, useTransition, type ReactNode } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { createPost } from '@/lib/actions/post.actions';
 import { useRouter } from 'next/navigation';
 
 type CreatePostFormProps = {
@@ -32,21 +31,14 @@ function CreatePostForm({ user, profile, onSuccess }: CreatePostFormProps) {
 
   const handleAction = (formData: FormData) => {
     startTransition(async () => {
-        const result = await createPost(formData);
-        if (result.error) {
-            toast({
-                title: 'Error',
-                description: result.error,
-                variant: 'destructive',
-            });
-        } else {
-            toast({
-                title: 'Éxito',
-                description: 'Tu publicación ha sido creada.',
-            });
-            formRef.current?.reset();
-            onSuccess();
-        }
+        // Mock action
+        console.log('New post:', formData.get('content'));
+        toast({
+            title: 'Éxito',
+            description: 'Tu publicación ha sido creada (simulado).',
+        });
+        formRef.current?.reset();
+        onSuccess();
     });
   }
 
@@ -90,7 +82,7 @@ export function CreatePostDialog({ user, profile, children }: { user: User, prof
 
     const handleSuccess = () => {
         setOpen(false);
-        router.refresh();
+        // router.refresh(); // No need to refresh with mock data
     }
     
     return (
@@ -118,18 +110,14 @@ export default function CreatePost({ user, profile }: { user: User, profile: Pro
 
   const handleAction = async (formData: FormData) => {
     startTransition(async () => {
-        const result = await createPost(formData);
-        if (result.error) {
-            toast({
-                title: 'Error',
-                description: result.error,
-                variant: 'destructive',
-            });
-        } else {
-            formRef.current?.reset();
-            if(textareaRef.current) textareaRef.current.style.height = 'auto';
-            router.refresh();
-        }
+        console.log('New post:', formData.get('content'));
+        toast({
+            title: 'Éxito',
+            description: 'Publicación creada (simulado).',
+        });
+        formRef.current?.reset();
+        if(textareaRef.current) textareaRef.current.style.height = 'auto';
+        // router.refresh();
     });
   };
 

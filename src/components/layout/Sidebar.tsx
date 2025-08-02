@@ -1,30 +1,23 @@
-import { Home, User, PenSquare, LogIn } from 'lucide-react';
+import { Home, User, PenSquare } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '../ui/button';
 import UserNav from '../auth/UserNav';
 import { NexoLogo } from '../shared/NexoLogo';
 import { CreatePostDialog } from '../posts/CreatePost';
-import { createServerClient } from '@/lib/supabase/server';
 import type { Profile } from '@/lib/types';
 import { ThemeSwitcher } from '../theme/ThemeSwitcher';
+import { MOCK_USER } from '@/lib/mock-data';
 
 export default async function Sidebar() {
-  const supabase = createServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  let profile: Pick<Profile, 'username' | 'avatar_url' | 'full_name'> | null = null;
-  if (user) {
-    const { data } = await supabase.from('profiles').select('username, avatar_url, full_name').eq('id', user.id).single();
-    profile = data;
-  }
+  const user = MOCK_USER;
+  const profile = MOCK_USER as Profile;
 
   const navItems = [
-    { href: '/', icon: Home, label: 'Inicio', auth: false },
+    { href: '/', icon: Home, label: 'Inicio' },
     {
       href: `/u/${profile?.username}`,
       icon: User,
       label: 'Perfil',
-      auth: true,
     },
   ];
 
@@ -36,9 +29,7 @@ export default async function Sidebar() {
       </Link>
 
       <nav className="flex flex-1 flex-col gap-2">
-        {navItems.map((item) => {
-          if (item.auth && !user) return null;
-          return (
+        {navItems.map((item) => (
             <Link key={item.label} href={item.href}>
               <Button
                 variant="ghost"
@@ -48,34 +39,18 @@ export default async function Sidebar() {
                 <span className="hidden lg:inline">{item.label}</span>
               </Button>
             </Link>
-          );
-        })}
+          ))}
       </nav>
 
       <div className="mt-auto flex w-full flex-col gap-2">
         <ThemeSwitcher />
-        {user && profile ? (
-          <>
-            <CreatePostDialog user={user} profile={profile}>
-              <Button className="w-full justify-center gap-3 p-3 text-lg lg:justify-start">
-                <PenSquare className="h-6 w-6" />
-                <span className="hidden lg:inline">Publicar</span>
-              </Button>
-            </CreatePostDialog>
-
-            <UserNav user={user} profile={profile} />
-          </>
-        ) : (
-          <Link href="/login">
-            <Button
-              variant="ghost"
-              className="w-full justify-start gap-3 p-3 text-lg"
-            >
-              <LogIn className="h-6 w-6" />
-              <span className="hidden lg:inline">Iniciar Sesión</span>
-            </Button>
-          </Link>
-        )}
+        <CreatePostDialog user={user} profile={profile}>
+          <Button className="w-full justify-center gap-3 p-3 text-lg lg:justify-start">
+            <PenSquare className="h-6 w-6" />
+            <span className="hidden lg:inline">Publicar</span>
+          </Button>
+        </CreatePostDialog>
+        <UserNav user={user} profile={profile} />
       </div>
     </aside>
   );

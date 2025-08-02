@@ -12,7 +12,6 @@ import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import PostActions from './PostActions';
 import { useToast } from '@/hooks/use-toast';
-import * as postActions from '@/lib/actions/post.actions';
 
 export default function PostCard({ post, user }: { post: PostWithAuthor, user: User | null }) {
     const [optimisticLikes, setOptimisticLikes] = useState(post.likes_count);
@@ -23,31 +22,18 @@ export default function PostCard({ post, user }: { post: PostWithAuthor, user: U
 
     const handleLike = () => {
         if (!user) {
-            return router.push('/login');
+            toast({
+                title: 'Función no disponible',
+                description: 'Necesitas iniciar sesión para dar "me gusta".',
+                variant: "destructive"
+            });
+            return;
         }
         if (isLikePending) return;
 
-        startLikeTransition(async () => {
-            const originalLikes = optimisticLikes;
-            const originalHasLiked = optimisticHasLiked;
-            
+        startLikeTransition(() => {
             setOptimisticHasLiked(prev => !prev);
             setOptimisticLikes(prev => (optimisticHasLiked ? prev - 1 : prev + 1));
-            
-            const result = await postActions.toggleLike(post.id, optimisticHasLiked);
-
-            if (result.error) {
-                // Revert optimistic update on error
-                setOptimisticLikes(originalLikes);
-                setOptimisticHasLiked(originalHasLiked);
-                toast({
-                    title: "Error",
-                    description: result.error,
-                    variant: "destructive"
-                });
-            } else {
-                router.refresh();
-            }
         });
     }
 

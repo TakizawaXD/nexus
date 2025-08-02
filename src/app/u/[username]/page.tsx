@@ -1,20 +1,14 @@
 import PostCard from '@/components/posts/PostCard';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import * as userActions from '@/lib/actions/user.actions';
-import type { PostWithAuthor } from '@/lib/types';
+import type { PostWithAuthor, Profile } from '@/lib/types';
 import { notFound } from 'next/navigation';
 import { User as UserIcon } from 'lucide-react';
 import FollowButton from '@/components/users/FollowButton';
 import { Separator } from '@/components/ui/separator';
-import { createServerClient } from '@/lib/supabase/server';
+import { MOCK_PROFILES, MOCK_POSTS, MOCK_USER } from '@/lib/mock-data';
 
 export async function generateMetadata({ params }: { params: { username: string } }) {
-    const supabase = createServerClient();
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('full_name')
-        .eq('username', params.username)
-        .single();
+    const profile = MOCK_PROFILES.find(p => p.username === params.username);
 
     return {
         title: profile?.full_name ? `${profile.full_name} (@${params.username})` : `@${params.username}`,
@@ -26,16 +20,16 @@ export default async function ProfilePage({
 }: {
   params: { username: string };
 }) {
-  const supabase = createServerClient();
-  const { data: { user: authUser } } = await supabase.auth.getUser();
+  const authUser = MOCK_USER;
   
-  const { profile, posts, isFollowing, error } = await userActions.getProfileWithPosts(params.username);
+  const profile = MOCK_PROFILES.find(p => p.username === params.username);
 
-  if (!profile || error) {
+  if (!profile) {
     notFound();
   }
   
-  const userPosts: PostWithAuthor[] = posts ?? [];
+  const userPosts: PostWithAuthor[] = MOCK_POSTS.filter(p => p.author.username === profile.username) ?? [];
+  const isFollowing = profile.username !== 'neo'; // Mock logic
 
   return (
     <div>

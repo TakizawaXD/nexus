@@ -1,14 +1,8 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
 
+// This is a stub middleware. It currently does nothing.
 export async function middleware(request: NextRequest) {
-  const { supabase, response } = createServerClient();
-
-  // Refresh session if expired - required for Server Components
-  // https://supabase.com/docs/guides/auth/auth-helpers/nextjs#managing-session-with-middleware
-  await supabase.auth.getSession();
-
-  return response;
+  return NextResponse.next();
 }
 
 export const config = {

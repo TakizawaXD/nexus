@@ -3,21 +3,13 @@ import Feed from '@/components/posts/Feed';
 import { Separator } from '@/components/ui/separator';
 import * as postActions from '@/lib/actions/post.actions';
 import type { PostWithAuthor } from '@/lib/types';
-import { createServerClient } from '@/lib/supabase/server';
+import { MOCK_POSTS, MOCK_USER } from '@/lib/mock-data';
+import { Profile } from '@/lib/types';
 
 export default async function Home() {
-  const supabase = createServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const { data: profile } = user ? await supabase.from('profiles').select('*').eq('id', user.id).single() : { data: null };
-
-  const { posts, error } = await postActions.getPosts();
-
-  if (error) {
-    return <div className="p-8 text-center text-destructive">{error}</div>
-  }
+  const user = MOCK_USER;
+  const profile = MOCK_USER as Profile;
+  const posts = MOCK_POSTS as PostWithAuthor[];
 
   return (
     <div className="w-full">
@@ -29,7 +21,7 @@ export default async function Home() {
 
       <Separator />
 
-      <Feed serverPosts={posts as PostWithAuthor[]} user={user}/>
+      <Feed serverPosts={posts} user={user}/>
     </div>
   );
 }

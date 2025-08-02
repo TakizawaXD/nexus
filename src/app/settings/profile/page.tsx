@@ -1,25 +1,10 @@
 import { Separator } from "@/components/ui/separator"
 import { ProfileForm } from "../_components/profile-form"
-import { createServerClient } from "@/lib/supabase/server"
-import { notFound, redirect } from "next/navigation"
+import { MOCK_USER } from "@/lib/mock-data"
+import { Profile } from "@/lib/types"
 
 export default async function SettingsProfilePage() {
-    const supabase = createServerClient()
-
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-        redirect('/login')
-    }
-
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single()
-
-    if (!profile) {
-        notFound()
-    }
+    const profile = MOCK_USER as Profile;
     
     return (
         <div className="space-y-6">
