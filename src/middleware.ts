@@ -8,9 +8,21 @@ export async function middleware(request: NextRequest) {
     },
   });
 
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    // Si las variables de entorno no están configuradas,
+    // se devuelve la respuesta sin inicializar Supabase.
+    // Esto evita que la aplicación se rompa y permite al desarrollador
+    // ver la interfaz mientras configura las credenciales.
+    console.warn("Supabase URL or Anon Key is missing. Skipping Supabase client initialization in middleware.");
+    return response;
+  }
+
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         get(name: string) {
@@ -57,15 +69,6 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
-
-  // Rutas públicas que no requieren autenticación
-  // const publicRoutes = ['/login', '/register', '/auth/callback'];
-
-  // Se comenta la redirección para permitir el acceso público
-  // if (!user && !publicRoutes.includes(pathname)) {
-  //   // Si el usuario no está autenticado y la ruta no es pública, redirigir a login
-  //   return NextResponse.redirect(new URL('/login', request.url));
-  // }
   
   if (user && (pathname === '/login' || pathname === '/register')) {
     // Si el usuario está autenticado y trata de acceder a login/register, redirigir a la home
