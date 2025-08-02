@@ -1,20 +1,14 @@
 import CreatePost from '@/components/posts/CreatePost';
 import Feed from '@/components/posts/Feed';
 import { Separator } from '@/components/ui/separator';
-import { getAuthProfile } from '@/lib/actions/user.actions';
-import { getPosts } from '@/lib/actions/post.actions';
+import { MOCK_POSTS, MOCK_USER } from '@/lib/mock-data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { redirect } from 'next/navigation';
 
 export default async function Home() {
-  const profile = await getAuthProfile();
+  const profile = MOCK_USER;
 
-  if (!profile) {
-    redirect('/login');
-  }
-
-  const { posts: forYouPosts } = await getPosts('foryou');
-  const { posts: followingPosts } = await getPosts('following');
+  const forYouPosts = MOCK_POSTS;
+  const followingPosts = MOCK_POSTS.filter(p => p.author.id !== '3');
 
   return (
     <Tabs defaultValue="foryou">
