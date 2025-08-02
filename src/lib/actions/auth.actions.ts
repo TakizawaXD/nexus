@@ -12,8 +12,12 @@ const loginSchema = z.object({
 });
 
 const signupSchema = z.object({
-    email: z.string().email('Correo electrónico inválido.'),
-    password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres.'),
+    email: z.string().email({ message: 'Correo electrónico inválido.' }),
+    password: z.string().min(6, { message: 'La contraseña debe tener al menos 6 caracteres.' }),
+    confirmPassword: z.string()
+}).refine(data => data.password === data.confirmPassword, {
+    message: "Las contraseñas no coinciden.",
+    path: ["confirmPassword"], // path of error
 });
 
 export async function login(prevState: any, formData: FormData) {
@@ -48,7 +52,8 @@ export async function signup(prevState: any, formData: FormData) {
 
     if (!validatedFields.success) {
         return {
-             error: validatedFields.error.flatten().fieldErrors,
+             error: "Campos inválidos",
+             errors: validatedFields.error.flatten().fieldErrors,
         };
     }
 

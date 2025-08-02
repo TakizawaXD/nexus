@@ -74,13 +74,22 @@ export function AuthForm({ type }: { type: 'login' | 'register' }) {
           <div className="space-y-2">
             <Label htmlFor="email">Correo Electrónico</Label>
             <Input id="email" name="email" type="email" placeholder="tu@email.com" required />
+            {state?.errors?.email && <p className="text-sm font-medium text-destructive">{state.errors.email}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Contraseña</Label>
             <Input id="password" name="password" type="password" required />
+            {state?.errors?.password && <p className="text-sm font-medium text-destructive">{state.errors.password}</p>}
           </div>
-          {state?.error && (
-            <p className="text-sm font-medium text-destructive">{typeof state.error === 'string' ? state.error : JSON.stringify(state.error)}</p>
+          {type === 'register' && (
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirmar Contraseña</Label>
+              <Input id="confirmPassword" name="confirmPassword" type="password" required />
+              {state?.errors?.confirmPassword && <p className="text-sm font-medium text-destructive">{state.errors.confirmPassword}</p>}
+            </div>
+          )}
+          {state?.error && !state.errors &&(
+            <p className="text-sm font-medium text-destructive">{state.error}</p>
           )}
           <SubmitButton type={type} />
         </form>
