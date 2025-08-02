@@ -54,27 +54,24 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user } } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
 
-  const protectedRoutes = ['/settings'];
-  const publicRoutes = ['/login', '/register', '/auth/callback', '/'];
+  // Rutas públicas que no requieren autenticación
+  // const publicRoutes = ['/login', '/register', '/auth/callback'];
 
-  // Si no hay sesión y la ruta no es una de las públicas principales, protegerla.
-  // Permite el acceso a perfiles de usuario y posts individuales.
-  if (!session && !publicRoutes.some(route => pathname === route) && !pathname.startsWith('/u/') && !pathname.startsWith('/post/')) {
-     if (protectedRoutes.some(route => pathname.startsWith(route))) {
-        return NextResponse.redirect(new URL('/login', request.url));
-     }
-  }
+  // Se comenta la redirección para permitir el acceso público
+  // if (!user && !publicRoutes.includes(pathname)) {
+  //   // Si el usuario no está autenticado y la ruta no es pública, redirigir a login
+  //   return NextResponse.redirect(new URL('/login', request.url));
+  // }
   
-  // Si el usuario tiene sesión y trata de acceder a login/register, redirigir a la home.
-  if (session && (pathname === '/login' || pathname === '/register')) {
+  if (user && (pathname === '/login' || pathname === '/register')) {
+    // Si el usuario está autenticado y trata de acceder a login/register, redirigir a la home
     return NextResponse.redirect(new URL('/', request.url));
   }
 
-  // Permite el acceso a todas las demás rutas
   return response;
 }
 
