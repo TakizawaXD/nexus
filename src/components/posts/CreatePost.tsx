@@ -12,32 +12,55 @@ import {
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
-import type { MockUser } from '@/lib/types';
+import type { MockUser, PostWithAuthor } from '@/lib/types';
 import { Loader2, Send } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useRef, useState, type ReactNode } from 'react';
+import { MOCK_USER } from '@/lib/mock-data';
 
-function CreatePostForm({ user, onPostSuccess }: { user: MockUser, onPostSuccess: () => void }) {
+type CreatePostFormProps = {
+    user: MockUser;
+    onPostSuccess: (newPost: PostWithAuthor) => void;
+    onClose: () => void;
+}
+
+function CreatePostForm({ user, onPostSuccess, onClose }: CreatePostFormProps) {
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const router = useRouter();
 
   const handlePost = async () => {
-    if (content.trim().length === 0) return;
+    if (!content.trim() || !user) return;
 
     setIsSubmitting(true);
+    
+    // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    console.log('Nueva Publicación:', { content, userId: user.id });
+    const newPost: PostWithAuthor = {
+        id: `p${Date.now()}`,
+        content,
+        image_url: null,
+        created_at: new Date().toISOString(),
+        author: {
+            id: user.id,
+            username: user.username,
+            full_name: user.full_name,
+            avatar_url: user.avatar_url,
+        },
+        user_has_liked_post: false,
+        likes_count: 0,
+        comments_count: 0
+    };
 
+    console.log('Nueva Publicación:', newPost);
+
+    onPostSuccess(newPost);
     setContent('');
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
     }
-    onPostSuccess();
-    router.refresh();
     setIsSubmitting(false);
+    onClose();
   };
 
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -46,15 +69,15 @@ function CreatePostForm({ user, onPostSuccess }: { user: MockUser, onPostSuccess
       e.target.style.height = `${e.target.scrollHeight}px`;
   }
 
-  const avatarUrl = user.avatar_url;
-  const username = user.username ?? 'U';
+  const avatarUrl = user?.avatar_url;
+  const username = user?.username ?? 'U';
   const fallback = username.charAt(0).toUpperCase();
 
   return (
     <div className="flex w-full flex-col">
         <div className="flex gap-4 p-4">
             <Avatar>
-                <AvatarImage src={avatarUrl} alt={username} />
+                <AvatarImage src={avatarUrl ?? undefined} alt={username} />
                 <AvatarFallback>{fallback}</AvatarFallback>
             </Avatar>
             <Textarea
@@ -69,9 +92,7 @@ function CreatePostForm({ user, onPostSuccess }: { user: MockUser, onPostSuccess
         </div>
         <DialogFooter className="p-4 border-t">
             <span className="text-sm text-muted-foreground mr-auto">{280 - content.length} caracteres restantes</span>
-            <DialogClose asChild>
-                <Button variant="ghost">Cancelar</Button>
-            </DialogClose>
+            <Button onClick={onClose} variant="ghost">Cancelar</Button>
             <Button onClick={handlePost} disabled={isSubmitting || content.trim().length === 0}>
                 {isSubmitting ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -85,7 +106,7 @@ function CreatePostForm({ user, onPostSuccess }: { user: MockUser, onPostSuccess
   );
 }
 
-export function CreatePostDialog({ user, children }: { user: MockUser, children: ReactNode }) {
+export function CreatePostDialog({ user, children, onPostCreated }: { user: MockUser, children: ReactNode, onPostCreated: (newPost: PostWithAuthor) => void }) {
     const [open, setOpen] = useState(false);
     return (
         <Dialog open={open} onOpenChange={setOpen}>
@@ -96,29 +117,44 @@ export function CreatePostDialog({ user, children }: { user: MockUser, children:
                 <DialogHeader className="p-4 border-b">
                     <DialogTitle>Crear Publicación</DialogTitle>
                 </DialogHeader>
-                <CreatePostForm user={user} onPostSuccess={() => setOpen(false)} />
+                <CreatePostForm user={user} onPostSuccess={onPostCreated} onClose={() => setOpen(false)} />
             </DialogContent>
         </Dialog>
     )
 }
 
 // This is the inline version for the main feed
-export default function CreatePost({ user }: { user: MockUser }) {
+export default function CreatePost({ user, onPostCreated }: { user: MockUser, onPostCreated: (newPost: PostWithAuthor) => void }) {
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const router = useRouter();
 
   const handlePost = async () => {
-    if (content.trim().length === 0) return;
+    if (!content.trim() || !user) return;
 
     setIsSubmitting(true);
     await new Promise(resolve => setTimeout(resolve, 500));
-    console.log('Nueva Publicación:', { content, userId: user.id });
+    
+    const newPost: PostWithAuthor = {
+        id: `p${Date.now()}`,
+        content,
+        image_url: null,
+        created_at: new Date().toISOString(),
+        author: {
+            id: user.id,
+            username: user.username,
+            full_name: user.full_name,
+            avatar_url: user.avatar_url,
+        },
+        user_has_liked_post: false,
+        likes_count: 0,
+        comments_count: 0
+    };
 
+    console.log('Nueva Publicación:', newPost);
+    onPostCreated(newPost);
     setContent('');
     if (textareaRef.current) textareaRef.current.style.height = 'auto';
-    router.refresh();
     
     setIsSubmitting(false);
   };
@@ -129,8 +165,8 @@ export default function CreatePost({ user }: { user: MockUser }) {
     e.target.style.height = `${e.target.scrollHeight}px`;
   };
 
-  const avatarUrl = user.avatar_url;
-  const username = user.username ?? 'U';
+  const avatarUrl = user?.avatar_url;
+  const username = user?.username ?? 'U';
   const fallback = username.charAt(0).toUpperCase();
 
   return (

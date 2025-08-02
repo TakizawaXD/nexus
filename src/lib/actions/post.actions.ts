@@ -1,27 +1,19 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+// Este archivo ya no es necesario para la funcionalidad principal con datos simulados,
+// pero se mantiene para la estructura del proyecto.
+// Las acciones reales ahora se manejan en el estado del cliente.
 
 export async function addComment(postId: string, formData: FormData) {
     const content = formData.get('content') as string;
     if (!content.trim()) {
         return { success: false, error: 'El comentario no puede estar vacío.' };
     }
-    
-    // Aquí normalmente llamarías a tu API de backend para guardar el comentario.
-    console.log('Agregando comentario:', { postId, content: content.trim() });
-    
-    // Simularemos una respuesta exitosa.
-    revalidatePath(`/post/${postId}`);
-    revalidatePath('/'); // Para actualizar el recuento de comentarios en el feed
+    console.log('Agregando comentario (simulado):', { postId, content: content.trim() });
     return { success: true };
 }
 
 export async function deletePost(postId: string) {
-    // Aquí normalmente llamarías a tu API de backend para eliminar la publicación.
-    console.log('Eliminando publicación:', postId);
-
-    // Simularemos una respuesta exitosa.
-    revalidatePath('/');
+    console.log('Eliminando publicación (simulado):', postId);
     return { success: true };
 }
